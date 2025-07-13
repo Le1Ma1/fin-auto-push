@@ -1,0 +1,10 @@
+python-dotenv
+requests
+pandas
+bs4
+matplotlib
+plotly
+supabase
+APScheduler
+line-bot-sdk
+loguru
