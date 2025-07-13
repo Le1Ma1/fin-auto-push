@@ -13,7 +13,7 @@
 - `fetch_etf_flows`：爬取 farside ETF 淨流向
 - `process_and_plot`：數據彙整、生成折線圖、上傳雲端
 - `push_daily_summary`：推播摘要＋圖表至 LINE 群組
-
+```
 fin-auto-push/
 ├─ app/
 │   ├─ __init__.py
@@ -39,3 +39,4 @@ fin-auto-push/
 ├─ Dockerfile
 ├─ main.py                  # 啟動入口
 ├─ README.md
+```
