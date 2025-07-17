@@ -1,42 +1,26 @@
 # 金融數據自動化推播與可視覺化
 
-自動抓取全球資產市值排行、ETF 資金流，Supabase 雲端存儲、歷史數據彙整、深色折線圖視覺化，定時推播到 LINE 群組。Docker 化、API 安全、異常監控，開箱即用。
+本專案旨在建構一套雲端化、可持續維運的金融數據自動爬取與資料處理系統，並支援資料清洗、標準化與後續分析、推播或自動存儲。架構設計參照現代軟體工程模組化分層原則，強調責任分離與流程一致性，以利未來橫向擴充與個人持續精進。
 
-## 部署
-1. `cp .env.example .env` 並填寫環境參數
-2. `pip install -r requirements.txt`
-3. `python main.py`
-4. （建議 Docker 化上雲）
-
-## 任務流程
-- `fetch_global_assets`：爬取 8marketcap 市值排行
-- `fetch_etf_flows`：爬取 farside ETF 淨流向
-- `process_and_plot`：數據彙整、生成折線圖、上傳雲端
-- `push_daily_summary`：推播摘要＋圖表至 LINE 群組
 ```
 fin-auto-push/
-├─ app/
-│   ├─ __init__.py
-│   ├─ config.py            # 讀取 env 與全局參數
-│   ├─ db.py                # Supabase 操作
-│   ├─ fetcher/
-│   │   ├─ __init__.py
-│   │   ├─ marketcap.py     # 8marketcap 抓取
-│   │   ├─ farside.py           # farside ETF 抓取
-│   ├─ pipeline/
-│   │   ├─ __init__.py
-│   │   ├─ process.py       # 數據整理與可視化
-│   │   ├─ plot.py          # 折線圖生成
-│   ├─ push/
-│   │   ├─ __init__.py
-│   │   ├─ line.py          # LINE OA 推播
-│   ├─ scheduler.py         # APScheduler 定時任務
-│   ├─ alert.py             # 異常監控/告警
-├─ migrations/
-│   ├─ create_tables.sql    # 建表 SQL
-├─ .env
-├─ requirements.txt
-├─ Dockerfile
-├─ main.py                  # 啟動入口
-├─ README.md
+│
+├── app/
+│   ├── db.py                      # Supabase 查詢/寫入 ETF 資料
+│   ├── utils.py                   # 單位轉換、人性化數字、Flex 明細組裝
+│   ├── plot_chart.py              # ETF bar/line 圖表產生
+│   ├── config.py                  # API 金鑰、Supabase client 設定
+│   ├── fetcher/
+│   │   └── coinglass_etf.py       # 拉 coinglass API，ETF 原始數據
+│   ├── pipeline/
+│   │   └── processor.py           # API 回傳 JSON 轉 DataFrame
+│   ├── push/
+│   │   ├── line_command_handler.py # FastAPI + LINE webhook 主控（業務邏輯/組圖表/Flex）
+│   │   └── push_etf_chart.py      # 圖片上傳 imgbb 圖床
+│   └── tasks/
+│       └── fetch_etf_daily.py     # 自動拉取近 10 天資料 upsert（定時自動化/cron 專用）
+│
+├── requirements.txt               # Python 套件需求
+├── .env                           # API 金鑰、環境變數
+├── README.md                      # 專案說明文件
 ```
