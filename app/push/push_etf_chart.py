@@ -7,7 +7,7 @@ def upload_imgbb(image_path):
         files = {"image": f.read()}
     payload = {"key": api_key}
     res = requests.post("https://api.imgbb.com/1/upload", files=files, data=payload)
-    print("imgbb response:", res.text)   # 加這行
+    print("imgbb response:", res.text)
     if res.status_code == 200:
         return res.json()['data']['url']
     else:

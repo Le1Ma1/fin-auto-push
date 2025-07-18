@@ -1,4 +1,5 @@
 import pandas as pd
+import datetime
 
 def human_unit(val):
     if val is None or (isinstance(val, float) and pd.isna(val)):
@@ -36,7 +37,6 @@ def etf_flex_table(etf_summary):
     return rows
 
 def etf_flex_table_single_day(df):
-    # 只列出 df 當日（最新一天）每一個 ETF
     df['flow_usd'] = pd.to_numeric(df['flow_usd'], errors='coerce').fillna(0)
     df_day = df[df['date'] == df['date'].max()]
     etf_summary = df_day.groupby('etf_ticker')['flow_usd'].sum().sort_values(ascending=False)
@@ -63,3 +63,41 @@ def fill_bar_chart_dates(df_bar_raw, days=10):
     df_bar['total_flow_usd'] = df_bar['total_flow_usd'].fillna(0)
     df_bar = df_bar.sort_values('date')
     return df_bar
+
+def is_weekend(day):
+    """判斷日期是否週末（六日）"""
+    if isinstance(day, pd.Timestamp):
+        return day.weekday() >= 5
+    elif isinstance(day, datetime.date):
+        return day.weekday() >= 5
+    return False
+
+def get_latest_safe_etf_date(df):
+    now = datetime.datetime.now()
+    today = now.date()
+    today_ts = pd.Timestamp(today)  # <<<< 加這行
+    two_pm = now.replace(hour=14, minute=0, second=0, microsecond=0)
+    df['date'] = pd.to_datetime(df['date'])
+    all_days = sorted(df['date'].unique(), reverse=True)
+    if now >= two_pm:
+        for day in all_days:
+            if day < today_ts and not is_weekend(day):
+                return day
+    count = 0
+    for day in all_days:
+        if day < today_ts and not is_weekend(day):
+            count += 1
+            if count == 2:
+                return day
+    return None
+
+def get_recent_n_days_settled(df, target_date, n=14):
+    """給定已確認的 target_date，往前取 n 天的完整日"""
+    df['date'] = pd.to_datetime(df['date'])
+    start_date = target_date - pd.Timedelta(days=n-1)
+    return df[(df['date'] >= start_date) & (df['date'] <= target_date)]
+
+def get_all_settled_until(df, target_date):
+    """抓所有小於等於 target_date 的資料，安全去除假日/未結算日"""
+    df['date'] = pd.to_datetime(df['date'])
+    return df[df['date'] <= pd.Timestamp(target_date)]
