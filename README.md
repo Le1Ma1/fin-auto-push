@@ -1,34 +1,29 @@
-# 金融數據自動化推播與可視覺化
-
-本專案旨在建構一套雲端化、可持續維運的金融數據自動爬取與資料處理系統，並支援資料清洗、標準化與後續分析、推播或自動存儲。架構設計參照現代軟體工程模組化分層原則，強調責任分離與流程一致性，以利未來橫向擴充與個人持續精進。
+本專案用於**自動化抓取、同步、查詢與推播美國加密貨幣 ETF（如 BTC/ETH）每日資金流資料**，  
+並支援透過 LINE Bot 查詢互動，產出走勢圖、明細與統計。  
+整合 Coinglass 官方 API、Supabase 雲端資料庫，支援定時同步、Bubble/Bar/Line 圖表自動產生與圖床推播。
 
 ```
-fin-auto-push/                         # 主專案資料夾
+fin-auto-push/
 │
-├─ .env                                # 環境變數設定（API KEY、Supabase 連線資訊）
-├─ requirements.txt                    # Python 套件清單
-├─ README.md                           # 專案說明檔
+├── app/                           # 專案主程式碼目錄
+│   ├── db.py                      # Supabase 資料庫存取與 CRUD 操作
+│   ├── utils.py                   # 共用工具、單位/格式/日期/表格等
+│   ├── plot_chart.py              # 各式圖表產生（Bar/Line/Bubble）
+│   │
+│   ├── fetcher/                   # 外部 API 資料抓取
+│   │   └── coinglass_etf.py       # Coinglass ETF API 抓取
+│   ├── pipeline/                  # 資料清洗、轉換、欄位標準化
+│   │   └── processor.py           # API JSON → DataFrame 處理邏輯
+│   ├── push/                      # 推播、互動與圖床模組
+│   │   ├── line_command_handler.py# LINE Bot 查詢互動主入口
+│   │   └── push_etf_chart.py      # 圖表圖片上傳工具（imgbb）
+│   │
+│   ├── auto_daily_push.py         # 每日自動推播主流程（T+1 報表）
+│   ├── fetch_etf_daily.py         # 每日增量拉取與補資料
+│   ├── fetch_etf_history.py       # 歷史全量補資料（首次或重建）
+│   │
+│   └── requirements.txt           # Python 依賴套件清單
 │
-├─ main.py                             # (可選) 專案進入點，可用於手動全歷史匯入（可刪，已移至 tasks）
-│
-├─ app/                                # 專案主程式資料夾
-│  ├─ __init__.py                      # Python package 初始化檔
-│  ├─ config.py                        # Supabase 與 API KEY 設定
-│  ├─ db.py                            # 資料庫讀寫（查詢/逐筆 upsert/batch upsert function）
-│  ├─ utils.py                         # 工具函數（格式轉換、Flex Table、人性化單位等）
-│  ├─ plot_chart.py                    # 畫圖模組 (matplotlib 繪圖與字體設定)
-│
-│  ├─ fetcher/                         # 對接外部 API 取得原始資料
-│  │   ├─ coinglass_etf.py             # fetch_etf_flow（對 Coinglass API 抓 BTC/ETH ETF 歷史資料）
-│  │
-│  ├─ pipeline/                        # 各種資料清理、轉換
-│  │   ├─ processor.py                 # process_etf_flows_json (Coinglass json 轉 DataFrame)
-│  │
-│  ├─ push/                            # 圖片上傳、LINE 推播等
-│  │   ├─ push_etf_chart.py            # upload_imgbb (圖片上傳 imgbb)
-│  │   ├─ line_command_handler.py      # FastAPI + LINE Bot 主 webhook 處理
-│  │
-│  ├─ tasks/                           # 任務腳本 (批次寫入、定時更新)
-│  │   ├─ fetch_etf_history.py         # BTC/ETH 全歷史匯入（批次 upsert）
-│  └─  ├─ fetch_etf_daily.py           # 每日自動抓取更新
+├── .env                           # API 金鑰、敏感環境變數（不進版控）
+└── README.md                      # 專案說明、部署與維護文件
 ```
