@@ -1,5 +1,6 @@
 import pandas as pd
 import datetime
+import pytz
 
 def human_unit(val):
     if val is None or (isinstance(val, float) and pd.isna(val)):
@@ -11,13 +12,15 @@ def human_unit(val):
             return f"{val/div:.2f}{u}"
     return str(val)
 
-def get_ch_unit_and_div(max_val):
-    if abs(max_val) >= 1e12:
+def get_ch_unit_and_div(val):
+    if abs(val) >= 1e12:
         return '兆', 1e12
-    elif abs(max_val) >= 1e8:
+    elif abs(val) >= 1e9:
+        return '十億', 1e9
+    elif abs(val) >= 1e8:
         return '億', 1e8
-    elif abs(max_val) >= 1e4:
-        return '萬', 1e4
+    elif abs(val) >= 1e6:
+        return '百萬', 1e6
     else:
         return '元', 1
 
@@ -73,9 +76,10 @@ def is_weekend(day):
     return False
 
 def get_latest_safe_etf_date(df):
-    now = datetime.datetime.now()
+    tz = pytz.timezone('Asia/Taipei')
+    now = datetime.datetime.now(tz)
     today = now.date()
-    today_ts = pd.Timestamp(today)  # <<<< 加這行
+    today_ts = pd.Timestamp(today)
     two_pm = now.replace(hour=14, minute=0, second=0, microsecond=0)
     df['date'] = pd.to_datetime(df['date'])
     all_days = sorted(df['date'].unique(), reverse=True)
@@ -101,3 +105,11 @@ def get_all_settled_until(df, target_date):
     """抓所有小於等於 target_date 的資料，安全去除假日/未結算日"""
     df['date'] = pd.to_datetime(df['date'])
     return df[df['date'] <= pd.Timestamp(target_date)]
+
+def get_clean_name(row):
+    name = row['name']
+    if '(' in name:
+        name = name.split('(')[0].strip()
+    if name.upper() in ['BITCOIN', 'BTC', 'ETH', 'GOLD', 'SILVER']:
+        name = row['symbol']
+    return name

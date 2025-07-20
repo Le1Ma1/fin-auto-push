@@ -86,3 +86,15 @@ def upsert_etf_flows(df, table="etf_flows", batch_size=500, retry_times=3):
                     time.sleep(2)
                 else:
                     print("Skip insert batch.")
+
+def upsert_global_asset_snapshot(df, table="global_asset_snapshot", batch_size=20):
+    # 只保留合法欄位
+    allow_cols = ["date", "rank", "name", "symbol", "market_cap", "market_cap_num", "logo"]
+    df = df[allow_cols]
+    df = df.drop_duplicates(subset=["date", "rank", "symbol"], keep="last")
+    rows = df.to_dict(orient="records")
+    total = len(rows)
+    for i in range(0, total, batch_size):
+        batch = rows[i:i+batch_size]
+        supabase.table(table).upsert(batch).execute()
+    print(f"✅ 已 upsert {total} 筆資產市值快照進 {table}")
