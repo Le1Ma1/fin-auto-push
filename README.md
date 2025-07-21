@@ -5,7 +5,7 @@
 ```
 fin-auto-push/
 │
-├── README.md                   # 專案說明、功能與部署維護指南
+├── README.md                   # 專案說明
 ├── .env                        # API Key、環境變數（敏感資訊不進版控）
 │
 ├── app/                        # 主程式碼目錄，邏輯模組化
