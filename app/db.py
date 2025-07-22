@@ -6,42 +6,17 @@ import numpy as np
 from dotenv import load_dotenv
 from supabase import create_client
 
-# 萬用抓環境變數 function
-def env_any(*names):
-    for n in names:
-        v = os.getenv(n)
-        if v: return v
-    return None
-
 load_dotenv()
 
-SUPABASE_URL = env_any(
-    'SUPABASE_URL', 'supabase_url', 'SUPABASE-URL', 'supabase-url'
-)
-SUPABASE_KEY = env_any(
-    'SUPABASE_KEY', 'supabase_key', 'SUPABASE-KEY', 'supabase-key'
-)
-LINE_CHANNEL_SECRET = env_any(
-    'LINE_CHANNEL_SECRET', 'line_channel_secret', 'LINE-CHANNEL-SECRET', 'line-channel-secret'
-)
-LINE_CHANNEL_ACCESS_TOKEN = env_any(
-    'LINE_CHANNEL_ACCESS_TOKEN', 'line_channel_access_token', 'LINE-CHANNEL-ACCESS-TOKEN', 'line-channel-access-token'
-)
-LINE_ADMIN_USER_ID = env_any(
-    'LINE_ADMIN_USER_ID', 'line_admin_user_id', 'LINE-ADMIN-USER-ID', 'line-admin-user-id'
-)
-PUSH_GROUP_IDS = env_any(
-    'PUSH_GROUP_IDS', 'push_group_ids', 'PUSH-GROUP-IDS', 'push-group-ids'
-)
-IMGBB_API_KEY = env_any(
-    'IMGBB_API_KEY', 'imgbb_api_key', 'IMGBB-API-KEY', 'imgbb-api-key'
-)
-COINGLASS_API_KEY = env_any(
-    'COINGLASS_API_KEY', 'coinglass_api_key', 'COINGLASS-API-KEY', 'coinglass-api-key'
-)
-TZ = env_any(
-    'TZ', 'tz'
-)
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+LINE_CHANNEL_SECRET = os.getenv('LINE_CHANNEL_SECRET')
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
+LINE_ADMIN_USER_ID = os.getenv('LINE_ADMIN_USER_ID')
+PUSH_GROUP_IDS = os.getenv('PUSH_GROUP_IDS')
+IMGBB_API_KEY = os.getenv('IMGBB_API_KEY')
+COINGLASS_API_KEY = os.getenv('COINGLASS_API_KEY')
+TZ = os.getenv('TZ')
 
 # Debug
 print("[DEBUG] SUPABASE_URL:", SUPABASE_URL)
@@ -50,7 +25,6 @@ print("[DEBUG] SUPABASE_KEY:", SUPABASE_KEY[:12], "..." if SUPABASE_KEY else "�
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def query_etf_flows_all(symbol, table="etf_flows"):
-    # 分頁抓取全部歷史資料
     limit = 1000
     offset = 0
     all_data = []
@@ -94,7 +68,7 @@ def upsert_etf_flows(df, table="etf_flows", batch_size=500, retry_times=3):
     for i in range(0, total, batch_size):
         batch = rows[i:i+batch_size]
 
-        # ========== 逐筆刪除 ==========
+        # 逐筆刪除
         for row in batch:
             for attempt in range(retry_times):
                 try:
@@ -112,7 +86,7 @@ def upsert_etf_flows(df, table="etf_flows", batch_size=500, retry_times=3):
                     else:
                         print("Skip delete.")
 
-        # ========== 批次插入 ==========
+        # 批次插入
         for attempt in range(retry_times):
             try:
                 supabase.table(table).insert(batch).execute()
@@ -126,7 +100,6 @@ def upsert_etf_flows(df, table="etf_flows", batch_size=500, retry_times=3):
                     print("Skip insert batch.")
 
 def upsert_global_asset_snapshot(df, table="global_asset_snapshot", batch_size=20):
-    # 只保留合法欄位
     allow_cols = ["date", "rank", "name", "symbol", "market_cap", "market_cap_num", "logo"]
     df = df[allow_cols]
     df = df.drop_duplicates(subset=["date", "rank", "symbol"], keep="last")
