@@ -6,20 +6,47 @@ import numpy as np
 from dotenv import load_dotenv
 from supabase import create_client
 
+# 萬用抓環境變數 function
+def env_any(*names):
+    for n in names:
+        v = os.getenv(n)
+        if v: return v
+    return None
+
 load_dotenv()
-SUPABASE_KEY = (
-    os.getenv('SUPABASE_KEY') or
-    os.getenv('supabase_key') or
-    os.getenv('SUPABASE-KEY') or
-    os.getenv('supabase-key')
+
+SUPABASE_URL = env_any(
+    'SUPABASE_URL', 'supabase_url', 'SUPABASE-URL', 'supabase-url'
+)
+SUPABASE_KEY = env_any(
+    'SUPABASE_KEY', 'supabase_key', 'SUPABASE-KEY', 'supabase-key'
+)
+LINE_CHANNEL_SECRET = env_any(
+    'LINE_CHANNEL_SECRET', 'line_channel_secret', 'LINE-CHANNEL-SECRET', 'line-channel-secret'
+)
+LINE_CHANNEL_ACCESS_TOKEN = env_any(
+    'LINE_CHANNEL_ACCESS_TOKEN', 'line_channel_access_token', 'LINE-CHANNEL-ACCESS-TOKEN', 'line-channel-access-token'
+)
+LINE_ADMIN_USER_ID = env_any(
+    'LINE_ADMIN_USER_ID', 'line_admin_user_id', 'LINE-ADMIN-USER-ID', 'line-admin-user-id'
+)
+PUSH_GROUP_IDS = env_any(
+    'PUSH_GROUP_IDS', 'push_group_ids', 'PUSH-GROUP-IDS', 'push-group-ids'
+)
+IMGBB_API_KEY = env_any(
+    'IMGBB_API_KEY', 'imgbb_api_key', 'IMGBB-API-KEY', 'imgbb-api-key'
+)
+COINGLASS_API_KEY = env_any(
+    'COINGLASS_API_KEY', 'coinglass_api_key', 'COINGLASS-API-KEY', 'coinglass-api-key'
+)
+TZ = env_any(
+    'TZ', 'tz'
 )
 
-SUPABASE_URL = (
-    os.getenv('SUPABASE_URL') or
-    os.getenv('supabase_url') or
-    os.getenv('SUPABASE-URL') or
-    os.getenv('supabase-url')
-)
+# Debug
+print("[DEBUG] SUPABASE_URL:", SUPABASE_URL)
+print("[DEBUG] SUPABASE_KEY:", SUPABASE_KEY[:12], "..." if SUPABASE_KEY else "空值")
+
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def query_etf_flows_all(symbol, table="etf_flows"):
