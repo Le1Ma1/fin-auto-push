@@ -5,8 +5,7 @@ import matplotlib
 import matplotlib.font_manager as fm
 from app.utils import human_unit, get_ch_unit_and_div
 
-font_path = os.path.join(os.path.dirname(__file__), '..', 'NotoSansTC-Regular.ttf')
-font_path = os.path.abspath(font_path)
+font_path = "/app/NotoSansTC-Regular.ttf"
 
 myfont = fm.FontProperties(fname=font_path)
 matplotlib.rcParams['font.family'] = myfont.get_name()
