@@ -1,7 +1,7 @@
 import os
 import datetime
 import pandas as pd
-import math, time
+import time
 import numpy as np
 from dotenv import load_dotenv
 from supabase import create_client
@@ -14,6 +14,7 @@ LINE_CHANNEL_SECRET = os.getenv('LINE_CHANNEL_SECRET')
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
 LINE_ADMIN_USER_ID = os.getenv('LINE_ADMIN_USER_ID')
 PUSH_GROUP_IDS = os.getenv('PUSH_GROUP_IDS')
+TARGET_IDS = [i.strip() for i in PUSH_GROUP_IDS.split(",") if i.strip()]
 IMGBB_API_KEY = os.getenv('IMGBB_API_KEY')
 COINGLASS_API_KEY = os.getenv('COINGLASS_API_KEY')
 TZ = os.getenv('TZ')

@@ -1,12 +1,10 @@
 import logging
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
-from app.daily_asset_snapshot import daily_asset_snapshot
-
-# 匯入你的 job function
-from app.fetch_etf_daily import fetch_and_save as fetch_etf_daily   # 只拉最近幾天
-from app.auto_daily_push import daily_etf_tplus1_push               # 推播
-from app.auto_push_asset_competition import main as push_asset_competition
+from app.fetcher.daily_asset_snapshot import daily_asset_snapshot
+from app.fetcher.fetch_etf_daily import fetch_and_save as fetch_etf_daily
+from app.push.push_utils import push_flex_to_targets
+from app.push.flex_utils import get_full_flex_carousel  # 你要建立這支組合 function
 
 def fetch_all_data():
     fetch_etf_daily("BTC", days=5)
@@ -15,15 +13,15 @@ def fetch_all_data():
     # 可擴充更多 Job
 
 def push_all_reports():
-    daily_etf_tplus1_push("BTC")
-    daily_etf_tplus1_push("ETH")
-    push_asset_competition()
+    # 這裡直接產生五合一 carousel 並推播多用戶
+    flex_carousel = get_full_flex_carousel()
+    push_flex_to_targets(flex_carousel)
 
 def main():
     sched = BlockingScheduler(timezone="Asia/Taipei")
 
-    # 13:59 抓取資料
-    sched.add_job(fetch_all_data, CronTrigger(hour=13, minute=59))
+    # 13:55 抓取資料
+    sched.add_job(fetch_all_data, CronTrigger(hour=13, minute=55))
     # 14:00 推播
     sched.add_job(push_all_reports, CronTrigger(hour=14, minute=0))
 
