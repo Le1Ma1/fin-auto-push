@@ -7,19 +7,18 @@ from app.utils import human_unit, get_ch_unit_and_div
 
 def get_font_properties():
     try:
-        # 自訂字型路徑（根據你的專案結構調整）
-        font_path = os.path.join(os.path.dirname(__file__), '..', 'NotoSansTC-Regular.ttf')
-        font_path = os.path.abspath(font_path)
+        # 根據部署情況調整字型檔路徑
+        font_path = os.path.abspath("/opt/render/project/src/fin-auto-push.NotoSansTC-Regular.ttf")
         if os.path.isfile(font_path):
+            print(f"[INFO] 使用自訂字型：{font_path}")
             return fm.FontProperties(fname=font_path)
         else:
-            print(f"[WARN] 字型檔未找到，使用預設字型: {font_path}")
+            print(f"[WARN] 字型檔未找到，使用系統預設字型: {font_path}")
             return fm.FontProperties()  # 使用系統預設字型
     except Exception as e:
         print(f"[ERROR] 載入字型失敗: {e}")
         return fm.FontProperties()  # 使用系統預設字型
 
-# 設定字型
 myfont = get_font_properties()
 matplotlib.rcParams['font.family'] = myfont.get_name()
 matplotlib.rcParams['axes.unicode_minus'] = False
