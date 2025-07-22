@@ -1,10 +1,13 @@
+import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib
 import matplotlib.font_manager as fm
 from app.utils import human_unit, get_ch_unit_and_div
 
-font_path = 'NotoSansTC-Regular.ttf'   # 字型檔
+font_path = os.path.join(os.path.dirname(__file__), '..', 'NotoSansTC-Regular.ttf')
+font_path = os.path.abspath(font_path)
+
 myfont = fm.FontProperties(fname=font_path)
 matplotlib.rcParams['font.family'] = myfont.get_name()
 matplotlib.rcParams['axes.unicode_minus'] = False
