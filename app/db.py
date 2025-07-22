@@ -7,8 +7,19 @@ from dotenv import load_dotenv
 from supabase import create_client
 
 load_dotenv()
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_KEY = (
+    os.getenv('SUPABASE_KEY') or
+    os.getenv('supabase_key') or
+    os.getenv('SUPABASE-KEY') or
+    os.getenv('supabase-key')
+)
+
+SUPABASE_URL = (
+    os.getenv('SUPABASE_URL') or
+    os.getenv('supabase_url') or
+    os.getenv('SUPABASE-URL') or
+    os.getenv('supabase-url')
+)
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def query_etf_flows_all(symbol, table="etf_flows"):
