@@ -221,31 +221,23 @@ def get_full_flex_carousel():
     df_asset = asset_top10_to_df(asset_list, today)
     df_asset['ticker'] = df_asset['name'].apply(lambda x: x.split()[-1].replace(")", ""))
 
-    # 動態單位自動切換
-    def auto_unit(x):
-        x = float(x)
-        if x >= 1e12:
-            return x / 1e12, "兆"
-        elif x >= 1e8:
-            return x / 1e8, "億"
-        elif x >= 1e6:
-            return x / 1e6, "百萬"
-        else:
-            return x, ""
+    # === 市值直接用 Supabase symbol 欄位 ===
+    df_asset['market_cap_display'] = df_asset['symbol'].apply(lambda x: str(x).replace("T", "兆") if isinstance(x, str) else x)   # symbol 就是你要的市值顯示字串
+    market_cap_header = "市值(美元)"
 
-    df_asset['market_cap_display'], unit_list = zip(*df_asset['market_cap_num'].apply(auto_unit))
-    df_asset['market_cap_display'] = df_asset['market_cap_display'].apply(lambda x: f"{x:,.2f}")
-
-    # 判斷最大單位（用最大值來定，標題自動跟著走）
-    max_unit = max(unit_list, key=lambda u: ["", "百萬", "億", "兆"].index(u))
-    market_cap_header = f"市值({max_unit}美元)"
-
-    # 價格（去掉 $ 號）
+    # 價格（如你要 price 欄位或 market_cap 價格，依你需求）
     df_asset['price_value'] = df_asset['market_cap']
     df_asset['price_display'] = df_asset['price_value'].apply(lambda x: str(x).replace("$", "") if x is not None else "-")
 
     df_sorted = df_asset.sort_values('market_cap_num', ascending=False).reset_index(drop=True)
-    img_asset = upload_imgbb(plot_asset_top10_bar_chart(df_sorted, today, unit_str=max_unit, unit_div=1 if max_unit=="" else (1e6 if max_unit=="百萬" else 1e8 if max_unit=="億" else 1e12)))
+    img_asset = upload_imgbb(
+        plot_asset_top10_bar_chart(
+            df_sorted,
+            today,
+            unit_str="",
+            unit_div=1
+        )
+    )
     flex_asset = get_asset_competition_flex(today, df_sorted, img_asset, market_cap_header)
 
     carousel = {
