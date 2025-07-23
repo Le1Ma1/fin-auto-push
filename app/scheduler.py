@@ -21,9 +21,11 @@ def main():
     sched = BlockingScheduler(timezone="Asia/Taipei")
 
     # 13:50 抓取資料
-    sched.add_job(fetch_all_data, CronTrigger(hour=13, minute=50))
+    sched.add_job(fetch_all_data, CronTrigger(hour=22, minute=46))
+    print('爬取數據中')
     # 14:00 推播
-    sched.add_job(push_all_reports, CronTrigger(hour=14, minute=0))
+    sched.add_job(push_all_reports, CronTrigger(hour=22, minute=49))
+    print('推播完成')
 
     print("🔔 Scheduler started, press Ctrl+C to quit")
     sched.start()
