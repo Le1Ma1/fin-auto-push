@@ -218,7 +218,7 @@ def get_full_flex_carousel():
     df_asset = asset_top10_to_df(asset_list, today)
     df_asset['ticker'] = df_asset['name'].apply(lambda x: x.split()[-1].replace(")", ""))
 
-    # 市值
+    # 市值處理 function
     def en_unit_to_zh_and_fmt(s):
         s = str(s).replace("$", "").strip()
         import re
@@ -235,19 +235,32 @@ def get_full_flex_carousel():
         else:
             return s
 
-    df_asset['market_cap_display'] = df_asset['symbol'].apply(en_unit_to_zh_and_fmt)
-    market_cap_header = "市值"
+    import re
+    def parse_market_cap_symbol(s):
+        s = str(s).replace("$", "").replace(",", "").strip()
+        match = re.match(r'([0-9.]+)\s*([TBM]?)', s)
+        if not match:
+            return 0
+        num, unit = match.groups()
+        unit_map = {"T": 1e12, "B": 1e9, "M": 1e6}
+        num = float(num)
+        mult = unit_map.get(unit, 1)
+        return num * mult
 
-    # 價格（market_cap_num 不是 market_cap）
+    df_asset['market_cap_display'] = df_asset['symbol'].apply(en_unit_to_zh_and_fmt)
+    df_asset['symbol_cap_num'] = df_asset['symbol'].apply(parse_market_cap_symbol)
+    market_cap_header = "市值"   # ← 這一行加進去！
+
     df_asset['price_display'] = df_asset['market_cap_num'].apply(lambda x: f"{float(x):,.1f}" if pd.notnull(x) else "-")
 
-    df_sorted = df_asset.sort_values('market_cap_num', ascending=False).reset_index(drop=True)
+    df_sorted = df_asset.sort_values('symbol_cap_num', ascending=False).reset_index(drop=True)
+
     img_asset = upload_imgbb(
         plot_asset_top10_bar_chart(
             df_sorted,
             today,
-            unit_str="",
-            unit_div=1
+            unit_str="兆",
+            unit_div=1e12
         )
     )
     flex_asset = get_asset_competition_flex(today, df_sorted, img_asset, market_cap_header)
