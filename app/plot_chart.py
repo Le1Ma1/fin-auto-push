@@ -97,9 +97,9 @@ def plot_etf_history_line_chart(df, symbol):
     return img_path
 
 def plot_asset_top10_bar_chart(df, today, unit_str='億', unit_div=1e8):
-    df_sorted = df.sort_values('market_cap_num', ascending=False).reset_index(drop=True)
+    df_sorted = df.sort_values('symbol_cap_num', ascending=False).reset_index(drop=True)
     y_labels = [f"{i+1}. {name}" for i, name in enumerate(df_sorted['name'])]
-    bar_values = df_sorted['market_cap_num'] / unit_div
+    bar_values = df_sorted['symbol_cap_num'] / unit_div
 
     fig, ax = plt.subplots(figsize=(12, 7), facecolor='#191E24')
     ax.set_facecolor('#191E24')
