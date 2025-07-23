@@ -134,45 +134,74 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=14):
             "contents": [
                 {"type": "text", "text": f"{symbol} ETF 全歷史資金流", "weight": "bold", "size": "xl", "color": "#F5FAFE"},
                 {"type": "text", "text": f"{df_history['date'].min().strftime('%Y-%m-%d')} ~ {df_history['date'].max().strftime('%Y-%m-%d')}", "size": "md", "color": "#F5FAFE"},
+                
+                # 最大單日淨流入：金額＋日期（綠字）
                 {
-                    "type": "box",
-                    "layout": "horizontal",
-                    "margin": "md",
-                    "contents": [
-                        {"type": "text", "text": "最大單日淨流入：", "color": "#F5FAFE", "size": "sm"},
-                        {"type": "text", "text": human_unit(max_in_hist), "color": "#00b300", "weight": "bold", "size": "sm"},
-                        {"type": "text", "text": f"（{max_in_date_hist}）", "color": "#00b300", "size": "sm"}
-                    ]
+                    "type": "text",
+                    "text": f"最大單日淨流入：",
+                    "size": "md",
+                    "color": "#F5FAFE",
+                    "margin": "md"
                 },
                 {
-                    "type": "box",
-                    "layout": "horizontal",
-                    "contents": [
-                        {"type": "text", "text": "最大單日淨流出：", "color": "#F5FAFE", "size": "sm"},
-                        {"type": "text", "text": human_unit(max_out_hist), "color": "#D50000", "weight": "bold", "size": "sm"},
-                        {"type": "text", "text": f"（{max_out_date_hist}）", "color": "#D50000", "size": "sm"}
-                    ]
+                    "type": "text",
+                    "text": f"{human_unit(max_in_hist)}（{max_in_date_hist}）",
+                    "size": "md",
+                    "color": "#00b300",
+                    "weight": "bold",
+                    "margin": "sm"
+                },
+                # 最大單日淨流出：金額＋日期（紅字）
+                {
+                    "type": "text",
+                    "text": f"最大單日淨流出：",
+                    "size": "md",
+                    "color": "#F5FAFE",
+                    "margin": "md"
                 },
                 {
-                    "type": "box",
-                    "layout": "horizontal",
-                    "contents": [
-                        {"type": "text", "text": "中位數：", "color": "#F5FAFE", "size": "sm"},
-                        {"type": "text", "text": human_unit(nonzero_median_hist), "color": "#F5FAFE", "size": "sm"}
-                    ]
+                    "type": "text",
+                    "text": f"{human_unit(max_out_hist)}（{max_out_date_hist}）",
+                    "size": "md",
+                    "color": "#D50000",
+                    "weight": "bold",
+                    "margin": "sm"
+                },
+                # 中位數（綠字）
+                {
+                    "type": "text",
+                    "text": f"中位數：",
+                    "size": "md",
+                    "color": "#F5FAFE",
+                    "margin": "md"
                 },
                 {
-                    "type": "box",
-                    "layout": "horizontal",
-                    "contents": [
-                        {"type": "text", "text": "平均值：", "color": "#F5FAFE", "size": "sm"},
-                        {"type": "text", "text": human_unit(mean_hist), "color": "#F5FAFE", "size": "sm"}
-                    ]
+                    "type": "text",
+                    "text": f"{human_unit(nonzero_median_hist)}",
+                    "size": "md",
+                    "color": "#00b300",
+                    "weight": "bold",
+                    "margin": "sm"
+                },
+                # 平均值（綠字）
+                {
+                    "type": "text",
+                    "text": f"平均值：",
+                    "size": "md",
+                    "color": "#F5FAFE",
+                    "margin": "md"
+                },
+                {
+                    "type": "text",
+                    "text": f"{human_unit(mean_hist)}",
+                    "size": "md",
+                    "color": "#00b300",
+                    "weight": "bold",
+                    "margin": "sm"
                 }
             ]
         }
     }
-
     return bubble_14d, bubble_hist
 
 def get_full_flex_carousel():
