@@ -134,7 +134,7 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=14):
             "contents": [
                 {"type": "text", "text": f"{symbol} ETF 全歷史資金流", "weight": "bold", "size": "xl", "color": "#F5FAFE"},
                 {"type": "text", "text": f"{df_history['date'].min().strftime('%Y-%m-%d')} ~ {df_history['date'].max().strftime('%Y-%m-%d')}", "size": "md", "color": "#F5FAFE"},
-                
+
                 # 最大單日淨流入：金額＋日期（綠字）
                 {
                     "type": "text",
@@ -222,8 +222,8 @@ def get_full_flex_carousel():
     df_asset['ticker'] = df_asset['name'].apply(lambda x: x.split()[-1].replace(")", ""))
     df_asset['market_cap_display'] = df_asset['market_cap_num'].apply(lambda x: f"{x/1e12:.2f}" if x else "0.00")
     market_cap_header = "市值(兆美元)"
-    df_asset['price_value'] = df_asset['market_cap'].apply(lambda x: None)  # 你可改用正確欄位
-    df_asset['price_display'] = df_asset['price_value'].apply(lambda x: f"{x:,.2f}" if x is not None else "-")
+    df_asset['price_value'] = df_asset['market_cap']   # 直接拿 market_cap
+    df_asset['price_display'] = df_asset['price_value'].apply(lambda x: str(x).replace("$", "") if x is not None else "-")
     df_sorted = df_asset.sort_values('market_cap_num', ascending=False).reset_index(drop=True)
     img_asset = upload_imgbb(plot_asset_top10_bar_chart(df_sorted, today, unit_str="兆", unit_div=1e12))
     flex_asset = get_asset_competition_flex(today, df_sorted, img_asset, market_cap_header)
