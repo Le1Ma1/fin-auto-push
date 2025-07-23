@@ -5,13 +5,8 @@ import matplotlib
 import matplotlib.font_manager as fm
 from app.utils import human_unit, get_ch_unit_and_div
 
-import os
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-
 def get_font_properties():
     try:
-        # 根據部署情況調整字型檔路徑
         font_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'NotoSansTC-Regular.ttf'))
         print(f"[DEBUG] font path: {font_path}")
         if os.path.isfile(font_path):
@@ -22,11 +17,10 @@ def get_font_properties():
         else:
             print(f"[WARN] 字型檔不存在，使用系統預設字型: {font_path}")
             plt.rcParams['font.family'] = 'DejaVu Sans'
-            return fm.FontProperties()  # 使用系統預設字型
+            return fm.FontProperties()
     except Exception as e:
         print(f"[ERROR] 載入字型失敗: {e}")
-        return fm.FontProperties()  # 使用系統預設字型
-
+        return fm.FontProperties()
 myfont = get_font_properties()
 plt.rcParams['axes.unicode_minus'] = False
 
@@ -40,7 +34,8 @@ def plot_etf_bar_chart(df, symbol, days=14):
     max_val = daily['total_flow_usd'].abs().max()
     unit, unit_div = get_ch_unit_and_div(max_val)
     daily['value_unit'] = daily['total_flow_usd'] / unit_div
-    fig, ax = plt.subplots(figsize=(14, 7))
+    fig, ax = plt.subplots(figsize=(14, 7), facecolor='#191E24')
+    ax.set_facecolor('#191E24')
     colors = ['#FA5252' if val < 0 else '#1D9BF6' for val in daily['total_flow_usd']]
     bars = ax.bar(
         daily['date'].dt.strftime('%Y-%m-%d'),
@@ -55,21 +50,25 @@ def plot_etf_bar_chart(df, symbol, days=14):
             human_unit(val),
             ha='center', va='bottom' if val >= 0 else 'top', fontsize=16, color=color, fontweight='bold'
         )
-    ax.set_title(f"{symbol} ETF 近 {days} 日資金流（{unit}）", fontsize=22, weight='bold')
-    ax.set_xlabel("日期", fontsize=17)
-    ax.set_ylabel(f"資金流入/流出（{unit}）", fontsize=17)
-    ax.grid(axis='y', color='#bbb', linestyle='--', linewidth=1.0, alpha=0.8)
-    plt.xticks(rotation=30, ha='right', fontsize=15)
-    plt.yticks(fontsize=15)
+    ax.set_title(f"{symbol} ETF 近 {days} 日資金流（{unit}）", fontsize=22, weight='bold', color='white')
+    ax.set_xlabel("日期", fontsize=17, color='white')
+    ax.set_ylabel(f"資金流入/流出（{unit}）", fontsize=17, color='white')
+    ax.grid(axis='y', color='#bbb', linestyle='--', linewidth=1.0, alpha=0.5)
+    plt.xticks(rotation=30, ha='right', fontsize=15, color='white')
+    plt.yticks(fontsize=15, color='white')
+    ax.tick_params(axis='x', colors='white')
+    ax.tick_params(axis='y', colors='white')
+    for spine in ax.spines.values():
+        spine.set_color('white')
     plt.tight_layout()
     img_path = f"etf_{symbol}_bar_{daily['date'].min().date()}_{daily['date'].max().date()}.png"
-    plt.savefig(img_path, dpi=270, bbox_inches='tight')
+    plt.savefig(img_path, dpi=270, bbox_inches='tight', transparent=False)
     plt.close()
     return img_path
 
 def plot_etf_history_line_chart(df, symbol):
     matplotlib.rcParams['axes.unicode_minus'] = False
-    df=df.copy()
+    df = df.copy()
     df['date'] = pd.to_datetime(df['date'])
     daily = df.groupby('date').agg({'total_flow_usd': 'first'}).reset_index()
     daily = daily[daily['total_flow_usd'].notnull()]
@@ -77,36 +76,35 @@ def plot_etf_history_line_chart(df, symbol):
     max_val = daily['total_flow_usd'].abs().max()
     unit, unit_div = get_ch_unit_and_div(max_val)
     daily['value_unit'] = daily['total_flow_usd'] / unit_div
-    fig, ax = plt.subplots(figsize=(14, 6))
+    fig, ax = plt.subplots(figsize=(14, 6), facecolor='#191E24')
+    ax.set_facecolor('#191E24')
     ax.plot(daily['date'], daily['value_unit'], marker='o', linestyle='-', linewidth=3, color='#1D9BF6')
     ax.axhline(0, color='gray', linewidth=1)
-    ax.set_title(f"{symbol} ETF 全歷史資金流（{unit}）", fontsize=22, weight='bold')
-    ax.set_xlabel("日期", fontsize=17)
-    ax.set_ylabel(f"資金流入/流出（{unit}）", fontsize=17)
-    plt.xticks(rotation=15, fontsize=13)
-    plt.yticks(fontsize=13)
-    plt.grid(axis='y', color='#bbb', linestyle='--', linewidth=1.0, alpha=0.8)
+    ax.set_title(f"{symbol} ETF 全歷史資金流（{unit}）", fontsize=22, weight='bold', color='white')
+    ax.set_xlabel("日期", fontsize=17, color='white')
+    ax.set_ylabel(f"資金流入/流出（{unit}）", fontsize=17, color='white')
+    plt.xticks(rotation=15, fontsize=13, color='white')
+    plt.yticks(fontsize=13, color='white')
+    ax.tick_params(axis='x', colors='white')
+    ax.tick_params(axis='y', colors='white')
+    for spine in ax.spines.values():
+        spine.set_color('white')
+    plt.grid(axis='y', color='#bbb', linestyle='--', linewidth=1.0, alpha=0.4)
     plt.tight_layout()
     img_path = f"etf_{symbol}_history_line.png"
-    plt.savefig(img_path, dpi=270, bbox_inches='tight')
+    plt.savefig(img_path, dpi=270, bbox_inches='tight', transparent=False)
     plt.close()
     return img_path
 
 def plot_asset_top10_bar_chart(df, today, unit_str='億', unit_div=1e8):
-    import matplotlib.pyplot as plt
-
-    # 先用市值降冪排序
     df_sorted = df.sort_values('market_cap_num', ascending=False).reset_index(drop=True)
-    # 名次+資產名稱作為 y 軸
     y_labels = [f"{i+1}. {name}" for i, name in enumerate(df_sorted['name'])]
     bar_values = df_sorted['market_cap_num'] / unit_div
 
-    plt.figure(figsize=(12, 7), facecolor='#191E24')
-    ax = plt.gca()
+    fig, ax = plt.subplots(figsize=(12, 7), facecolor='#191E24')
     ax.set_facecolor('#191E24')
-    bars = plt.barh(y_labels, bar_values, color='#68A4FF')
+    bars = ax.barh(y_labels, bar_values, color='#68A4FF')
 
-    # --- 顏色優化 ---
     ax.spines['bottom'].set_color('white')
     ax.spines['top'].set_color('white')
     ax.spines['right'].set_color('white')
