@@ -30,8 +30,9 @@ def get_font_properties():
 myfont = get_font_properties()
 plt.rcParams['axes.unicode_minus'] = False
 
-def plot_etf_bar_chart(df, symbol, days=7):
+def plot_etf_bar_chart(df, symbol, days=14):
     matplotlib.rcParams['axes.unicode_minus'] = False
+    df = df.copy()
     df['date'] = pd.to_datetime(df['date'])
     daily = df.groupby('date').agg({'total_flow_usd': 'first'}).reset_index()
     daily = daily[daily['total_flow_usd'].notnull()]
@@ -68,6 +69,7 @@ def plot_etf_bar_chart(df, symbol, days=7):
 
 def plot_etf_history_line_chart(df, symbol):
     matplotlib.rcParams['axes.unicode_minus'] = False
+    df=df.copy()
     df['date'] = pd.to_datetime(df['date'])
     daily = df.groupby('date').agg({'total_flow_usd': 'first'}).reset_index()
     daily = daily[daily['total_flow_usd'].notnull()]
