@@ -20,8 +20,8 @@ def push_all_reports():
 def main():
     sched = BlockingScheduler(timezone="Asia/Taipei")
 
-    # 13:55 抓取資料
-    sched.add_job(fetch_all_data, CronTrigger(hour=13, minute=55))
+    # 13:50 抓取資料
+    sched.add_job(fetch_all_data, CronTrigger(hour=13, minute=50))
     # 14:00 推播
     sched.add_job(push_all_reports, CronTrigger(hour=14, minute=0))
 

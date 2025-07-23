@@ -41,19 +41,6 @@ def query_etf_flows_all(symbol, table="etf_flows"):
         df['date'] = pd.to_datetime(df['date'])
     return df
 
-def query_etf_flows(symbol, days=None, table="etf_flows"):
-    q = supabase.table(table).select("*").eq("asset", symbol)
-    if days is not None:
-        today = datetime.date.today()
-        start_date = today - datetime.timedelta(days=days-1)
-        q = q.gte("date", str(start_date))
-    q = q.order("date", desc=False).limit(10000)
-    resp = q.execute()
-    df = pd.DataFrame(resp.data)
-    if not df.empty:
-        df['date'] = pd.to_datetime(df['date'])
-    return df
-
 def upsert_etf_flows(df, table="etf_flows", batch_size=500, retry_times=3):
     allow_cols = ["date", "asset", "etf_ticker", "flow_usd", "price_usd", "total_flow_usd"]
     df = df[allow_cols].dropna(subset=["date", "asset", "etf_ticker"])
