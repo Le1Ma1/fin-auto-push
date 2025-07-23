@@ -205,29 +205,41 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=14):
     return bubble_14d, bubble_hist
 
 def get_full_flex_carousel():
-    # BTC
     df_btc = query_etf_flows_all("BTC")
     target_btc_date = get_latest_safe_etf_date(df_btc)
     btc_bubble_14d, btc_bubble_hist = get_flex_bubble_etf("BTC", df_btc, target_btc_date)
 
-    # ETH
     df_eth = query_etf_flows_all("ETH")
     target_eth_date = get_latest_safe_etf_date(df_eth)
     eth_bubble_14d, eth_bubble_hist = get_flex_bubble_etf("ETH", df_eth, target_eth_date)
 
-    # 資產榜
     today = datetime.date.today().strftime('%Y-%m-%d')
     asset_list = fetch_global_asset_top10()
     df_asset = asset_top10_to_df(asset_list, today)
     df_asset['ticker'] = df_asset['name'].apply(lambda x: x.split()[-1].replace(")", ""))
 
-    # === 市值直接用 Supabase symbol 欄位 ===
-    df_asset['market_cap_display'] = df_asset['symbol'].apply(lambda x: str(x).replace("T", "兆") if isinstance(x, str) else x)   # symbol 就是你要的市值顯示字串
-    market_cap_header = "市值(美元)"
+    # 市值
+    def en_unit_to_zh_and_fmt(s):
+        s = str(s).replace("$", "").strip()
+        import re
+        match = re.match(r'([0-9.]+)\s*([TBM]?)', s)
+        if match:
+            num, unit = match.groups()
+            try:
+                num_fmt = f"{float(num):,.1f}"
+            except:
+                num_fmt = num
+            unit_map = {"T": "兆", "B": "億", "M": "百萬"}
+            zh_unit = unit_map.get(unit, unit)
+            return f"{num_fmt}{zh_unit}"
+        else:
+            return s
 
-    # 價格（如你要 price 欄位或 market_cap 價格，依你需求）
-    df_asset['price_value'] = df_asset['market_cap']
-    df_asset['price_display'] = df_asset['price_value'].apply(lambda x: str(x).replace("$", "") if x is not None else "-")
+    df_asset['market_cap_display'] = df_asset['symbol'].apply(en_unit_to_zh_and_fmt)
+    market_cap_header = "市值"
+
+    # 價格（market_cap_num 不是 market_cap）
+    df_asset['price_display'] = df_asset['market_cap_num'].apply(lambda x: f"{float(x):,.1f}" if pd.notnull(x) else "-")
 
     df_sorted = df_asset.sort_values('market_cap_num', ascending=False).reset_index(drop=True)
     img_asset = upload_imgbb(
