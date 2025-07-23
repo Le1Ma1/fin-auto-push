@@ -1,8 +1,10 @@
+import datetime
 import os
+import pandas as pd
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from linebot import LineBotApi, WebhookHandler
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.models import MessageEvent, TextMessage, FlexSendMessage, TextSendMessage
 from app.db import query_etf_flows_all
 from app.plot_chart import plot_etf_bar_chart, plot_etf_history_line_chart, plot_asset_top10_bar_chart
 from app.push.push_etf_chart import upload_imgbb
@@ -18,8 +20,6 @@ from app.utils import (
 from app.fetcher.asset_ranking import fetch_global_asset_top10
 from app.pipeline.asset_ranking_df import asset_top10_to_df
 import app.fetcher.fetch_etf_daily as fetch_etf_daily
-from app.push.flex_utils import get_full_flex_carousel
-from app.push.push_utils import push_flex_to_targets
 
 app = FastAPI()
 load_dotenv()
@@ -29,7 +29,6 @@ ADMIN_USER_ID = os.getenv("LINE_ADMIN_USER_ID")
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 SECRET_COMMAND = "!update_data"
-SECRET_PUSH_TEST = "!test_push"
 
 @app.post("/callback")
 async def callback(request: Request):
@@ -59,15 +58,5 @@ def handle_message(event):
         except Exception as e:
             print(f"更新失敗：{e}")
             reply_text = "❌ 更新失敗，請稍後再試。"
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(reply_text))
-        return
-    
-    if text == SECRET_PUSH_TEST:
-        try:
-            carousel = get_full_flex_carousel()
-            push_flex_to_targets(carousel)
-            reply_text = "✅ 已發送測試 Flex 推播！"
-        except Exception as e:
-            reply_text = f"❌ 測試推播失敗：{e}"
         line_bot_api.reply_message(event.reply_token, TextSendMessage(reply_text))
         return
