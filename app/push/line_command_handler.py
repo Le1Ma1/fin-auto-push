@@ -75,3 +75,11 @@ def handle_message(event):
             reply_text = "❌ 強制同步失敗，請檢查日誌。"
         line_bot_api.reply_message(event.reply_token, TextSendMessage(reply_text))
         return
+
+    else:
+        try:
+            profile = line_bot_api.get_profile(event.source.user_id)
+            user_name = profile.display_name
+        except Exception as e:
+            user_name = "(未知用戶)"
+        print(f"[LINE用戶訊息] {user_name}: {user_id}\n訊息:\n{text}")
