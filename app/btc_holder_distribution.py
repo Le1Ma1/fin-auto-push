@@ -38,15 +38,36 @@ def fetch_exchange_reserves_coinglass():
         logging.error(f"[交易所儲備] Coinglass 取得失敗: {e}")
         return 0
 
+def fetch_longterm_holder_supply_coinglass():
+    url = "https://open-api-v4.coinglass.com/api/index/bitcoin-long-term-holder-supply"
+    headers = {
+        "accept": "application/json",
+        "CG-API-KEY": os.getenv("COINGLASS_API_KEY")
+    }
+    try:
+        resp = requests.get(url, headers=headers, timeout=20)
+        result = resp.json()
+        data = result.get("data", [])
+        if not data:
+            logging.error(f"[長期持有者] Coinglass 沒有 data")
+            return 0
+        latest = data[-1]
+        lth_btc = int(latest.get('long_term_holder_supply', 0))
+        logging.info(f"[長期持有者] Coinglass LTH Supply: {lth_btc}")
+        return lth_btc
+    except Exception as e:
+        logging.error(f"[長期持有者] Coinglass 取得失敗: {e}")
+        return 0
+
 def fetch_btc_holder_distribution():
     result = []  # << 這一行必加!
     # 1. 已遺失（假資料/待補真實爬蟲）
     lost_btc = 3050000
     result.append({"category": "已遺失", "btc_count": lost_btc, "percent": None, "source": "Glassnode"})
-    # 2. 長期持有者（假資料/待補）
-    long_term_btc = 14800000
-    result.append({"category": "長期持有者", "btc_count": long_term_btc, "percent": None, "source": "Glassnode"})
-    # 3. 交易所儲備（假資料/待補）
+    # 2. 長期持有者
+    lth_btc = fetch_longterm_holder_supply_coinglass()
+    result.append({"category": "長期持有者", "btc_count": lth_btc, "percent": None, "source": "Coinglass"})
+    # 3. 交易所儲備
     exchange_btc = fetch_exchange_reserves_coinglass()
     result.append({"category": "交易所儲備", "btc_count": exchange_btc, "percent": None, "source": "Coinglass"})
     # 4. 礦工持有（假資料/待補）
