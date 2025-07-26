@@ -12,6 +12,7 @@ from app.utils import (
 )
 from app.fetcher.asset_ranking import fetch_global_asset_top10
 from app.pipeline.asset_ranking_df import asset_top10_to_df
+from app.push.push_btc_holder import get_flex_bubble_btc_holder
 
 def get_asset_competition_flex(today, df, img_url, market_cap_header):
     trophy = [f"{i+1:02d}" for i in range(len(df))]
