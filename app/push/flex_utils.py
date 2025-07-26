@@ -265,8 +265,10 @@ def get_full_flex_carousel():
     )
     flex_asset = get_asset_competition_flex(today, df_sorted, img_asset, market_cap_header)
 
+    # === 新增持幣分布卡片 ===
+    flex_btc_holder = get_flex_bubble_btc_holder(days=14)
     carousel = {
         "type": "carousel",
-        "contents": [btc_bubble_14d, btc_bubble_hist, eth_bubble_14d, eth_bubble_hist, flex_asset]
+        "contents": [btc_bubble_14d, btc_bubble_hist, eth_bubble_14d, eth_bubble_hist, flex_asset, flex_btc_holder]
     }
     return carousel

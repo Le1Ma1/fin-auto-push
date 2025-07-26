@@ -97,3 +97,27 @@ def upsert_global_asset_snapshot(df, table="global_asset_snapshot", batch_size=2
         batch = rows[i:i+batch_size]
         supabase.table(table).upsert(batch).execute()
     print(f"✅ 已 upsert {total} 筆資產市值快照進 {table}")
+
+def upsert_btc_holder_distribution(df, table="btc_holder_distribution", batch_size=50):
+    df = df[["date", "category", "btc_count", "percent", "source"]]
+    rows = df.to_dict(orient="records")
+    total = len(rows)
+    for i in range(0, total, batch_size):
+        batch = rows[i:i+batch_size]
+        supabase.table(table).upsert(batch).execute()
+    print(f"✅ 已 upsert {total} 筆持幣分布進 {table}")
+
+def query_btc_holder_distribution(days=14, table="btc_holder_distribution"):
+    import datetime
+    end = datetime.date.today()
+    start = end - datetime.timedelta(days=days-1)
+    resp = supabase.table(table)\
+        .select("*")\
+        .gte("date", start.strftime("%Y-%m-%d"))\
+        .order("date", desc=False)\
+        .execute()
+    df = pd.DataFrame(resp.data)
+    if not df.empty:
+        df['date'] = pd.to_datetime(df['date'])
+    return df
+
