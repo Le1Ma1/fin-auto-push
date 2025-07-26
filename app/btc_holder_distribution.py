@@ -1,4 +1,4 @@
-import requests, datetime, logging, os
+import requests, datetime, logging, os, re
 import pandas as pd
 from bs4 import BeautifulSoup
 
