@@ -61,23 +61,26 @@ def fetch_etf_holdings_bitcointreasuries():
     }
     try:
         resp = requests.get(url, headers=headers, timeout=20)
-        soup = BeautifulSoup(resp.text, "html.parser")
+        # 用正則找到 <script id="__NEXT_DATA__">...</script>
+        match = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', resp.text, re.DOTALL)
+        if not match:
+            logging.error("沒找到 __NEXT_DATA__ script，網頁結構可能變動！")
+            return 0
+        json_data = json.loads(match.group(1))
+        treasuries = json_data['props']['pageProps']['treasuries']
         total_btc = 0
-        # 只抓數字那一格，每一 row 的第三欄是持有 BTC 數量
-        for row in soup.select("table tr"):
-            cols = row.find_all("td")
-            if len(cols) >= 3:
-                btc_str = cols[2].get_text(strip=True).replace(",", "")
-                try:
-                    btc = float(btc_str)
-                    total_btc += btc
-                except:
-                    continue
-        logging.info(f"[ETF/機構/中央銀行] bitcointreasuries.net 全部公開+主權基金持有BTC: {total_btc}")
+        for item in treasuries:
+            btc = float(item.get("btcBalance", 0))
+            total_btc += btc
+        logging.info(f"[ETF/機構/主權基金] bitcointreasuries.net 全球持有BTC: {total_btc}")
         return int(total_btc)
     except Exception as e:
-        logging.error(f"[ETF/機構/中央銀行] 取得失敗: {e}")
+        logging.error(f"[ETF/機構/主權基金] 取得失敗: {e}")
         return 0
+
+# 測試
+if __name__ == "__main__":
+    print(fetch_etf_holdings_bitcointreasuries())
 
 def fetch_btc_holder_distribution():
     today = datetime.date.today().strftime("%Y-%m-%d")
