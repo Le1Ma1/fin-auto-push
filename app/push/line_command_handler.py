@@ -78,22 +78,22 @@ def handle_message(event):
         return
 
     if text == SECRET_HOLDER_UPSERT:
-    try:
-        df = fetch_btc_holder_distribution()
-        msg_lines = []
-        # 組每個分類的回饋內容
-        for _, row in df.iterrows():
-            msg_lines.append(f"{row['category']}: {row['btc_count']} 枚 ({row['percent']}%) 來源: {row['source']}")
-        # 清理欄位格式
-        df_db = btc_holder_df_to_db(df)
-        upsert_btc_holder_distribution(df_db)
-        reply_text = "✅ [持幣分布] 數據已上傳！\n" + "\n".join(msg_lines)
-    except Exception as e:
-        import traceback
-        tb = traceback.format_exc()
-        reply_text = f"❌ [持幣分布] 上傳失敗：{e}\n```\n{tb}\n```"
-    line_bot_api.reply_message(event.reply_token, TextSendMessage(reply_text))
-    return
+        try:
+            df = fetch_btc_holder_distribution()
+            msg_lines = []
+            # 組每個分類的回饋內容
+            for _, row in df.iterrows():
+                msg_lines.append(f"{row['category']}: {row['btc_count']} 枚 ({row['percent']}%) 來源: {row['source']}")
+            # 清理欄位格式
+            df_db = btc_holder_df_to_db(df)
+            upsert_btc_holder_distribution(df_db)
+            reply_text = "✅ [持幣分布] 數據已上傳！\n" + "\n".join(msg_lines)
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            reply_text = f"❌ [持幣分布] 上傳失敗：{e}\n```\n{tb}\n```"
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(reply_text))
+        return
 
     else:
         try:
