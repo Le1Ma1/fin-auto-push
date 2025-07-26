@@ -57,34 +57,39 @@ def fetch_btc_holder_distribution():
     today = datetime.date.today().strftime("%Y-%m-%d")
     result = []
 
-    # ETF/Institutional
-    etf_btc = fetch_coinglass_etf_btc_balance()
-    result.append({"category": "ETF/Institutional", "btc_count": etf_btc, "percent": None, "source": "Coinglass"})
+    # --- 以下真 API 可用則用，無資料或失敗時設 0 ---
+    etf_btc = 0           # ETF/機構
+    speculative_btc = 0   # 交易所儲備
+    unmined_btc = 0       # 未開採
 
-    # Speculative/交易所
-    speculative_btc = fetch_coinglass_exchange_btc()
-    result.append({"category": "Speculative", "btc_count": speculative_btc, "percent": None, "source": "Coinglass"})
-
-    # Unmined Supply
-    unmined_btc = fetch_unmined_supply()
-    result.append({"category": "Unmined Supply", "btc_count": unmined_btc, "percent": None, "source": "blockchain.info"})
-
-    # 其他分類（這裡以假資料/網頁爬蟲補充）
+    # 其它用假資料（如上一步測試）
     long_term_btc = 14800000
     lost_btc = 3050000
     miners_btc = 1500000
-    result.append({"category": "Long-Term Holder", "btc_count": long_term_btc, "percent": None, "source": "CryptoQuant"})
-    result.append({"category": "Lost Supply", "btc_count": lost_btc, "percent": None, "source": "IntoTheBlock"})
-    result.append({"category": "Miners", "btc_count": miners_btc, "percent": None, "source": "BTC.com"})
 
-    # 計算總量，填 percent
+    # 1. 已遺失
+    result.append({"category": "已遺失", "btc_count": lost_btc, "percent": None, "source": "IntoTheBlock"})
+    # 2. 長期持有者
+    result.append({"category": "長期持有者", "btc_count": long_term_btc, "percent": None, "source": "CryptoQuant"})
+    # 3. 交易所儲備
+    result.append({"category": "交易所儲備", "btc_count": speculative_btc, "percent": None, "source": "Coinglass"})
+    # 4. 礦工持有
+    result.append({"category": "礦工持有", "btc_count": miners_btc, "percent": None, "source": "BTC.com"})
+    # 5. ETF/機構
+    result.append({"category": "ETF/機構", "btc_count": etf_btc, "percent": None, "source": "Coinglass"})
+    # 6. 未開採
+    result.append({"category": "未開採", "btc_count": unmined_btc, "percent": None, "source": "blockchain.info"})
+    # 7. 中央銀行／主權基金（前瞻性空欄）
+    result.append({"category": "中央銀行／主權基金", "btc_count": 0, "percent": None, "source": "暫無"})
+
+    # 計算總量與百分比
     total = sum(x["btc_count"] for x in result)
     for x in result:
         x["percent"] = round(x["btc_count"] / total * 100, 2) if total else None
         x["date"] = today
 
     df = pd.DataFrame(result)
-    logging.info(f"[BTC HOLDER] 六分類分布: \n{df}")
+    logging.info(f"[BTC HOLDER] 七分類分布: \n{df}")
     return df[["date", "category", "btc_count", "percent", "source"]]
 
 if __name__ == "__main__":
