@@ -9,6 +9,7 @@ def fetch_etf_holdings_coinglass():
     }
     try:
         resp = requests.get(url, headers=headers, timeout=20)
+        print("[DEBUG] Coinglass 回傳內容:", resp.text)
         data = resp.json().get("data", [])
         total_btc = 0
         for etf in data:
