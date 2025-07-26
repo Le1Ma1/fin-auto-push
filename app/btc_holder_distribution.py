@@ -1,5 +1,8 @@
-import requests, os, logging, datetime
+import requests, os, logging, datetime, time
 import pandas as pd
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 
 def fetch_etf_holdings_coinglass():
     url = "https://open-api-v4.coinglass.com/api/etf/bitcoin/list"
@@ -58,6 +61,39 @@ def fetch_longterm_holder_supply_coinglass():
     except Exception as e:
         logging.error(f"[長期持有者] Coinglass 取得失敗: {e}")
         return 0
+
+def fetch_lost_supply_coinglass_selenium():
+    url = "https://www.coinglass.com/zh-TW/pro/i/utxo"
+    driver = webdriver.Chrome()
+    try:
+        print("[DEBUG] 打開 coinglass UTXO 頁面...")
+        driver.get(url)
+        time.sleep(7)
+        print("[DEBUG] 頁面加載完畢，開始定位圖表...")
+
+        chart = driver.find_element(By.CLASS_NAME, "chartjs-render-monitor")
+        width = chart.size['width']
+        height = chart.size['height']
+        print(f"[DEBUG] 圖表尺寸: width={width}, height={height}")
+
+        actions = ActionChains(driver)
+        actions.move_to_element_with_offset(chart, width-20, height//2).perform()
+        print("[DEBUG] 已模擬滑鼠移動到最新數據點，等待 tooltip 載入...")
+        time.sleep(2)
+
+        # print("Page source:", driver.page_source[:1000])  # 如找不到元素時可用
+        tooltip = driver.find_element(By.CLASS_NAME, "echarts-tooltip")
+        value = tooltip.text
+        print("[DEBUG] Tooltip 內容:", value)
+        return value
+    except Exception as e:
+        print("[ERROR] Selenium 運行失敗:", e)
+        print(traceback.format_exc())
+        with open('debug.html','w',encoding='utf-8') as f:
+            f.write(driver.page_source)
+        return None
+    finally:
+        driver.quit()
 
 def fetch_btc_holder_distribution():
     result = []  # << 這一行必加!
