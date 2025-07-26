@@ -22,21 +22,21 @@ def fetch_etf_holdings_coinglass():
         logging.error(f"[ETF/機構] 取得失敗: {e}")
         return 0
 
-def fetch_exchange_reserves_coinglass():
-    url = "https://open-api-v4.coinglass.com/api/exchange/bitcoin/reserves"
+def fetch_exchange_reserves_coinglass_api():
+    url = "https://open-api-v4.coinglass.com/api/exchange/assets"  # 請確認是這個 endpoint
     headers = {
         "accept": "application/json",
         "CG-API-KEY": os.getenv("COINGLASS_API_KEY")
     }
     try:
         resp = requests.get(url, headers=headers, timeout=20)
-        print("[DEBUG] ETF API 回傳：", resp.text)
+        print(resp.text)  # Debugging line
         data = resp.json().get("data", [])
-        total_btc = sum(float(ex['btc']) for ex in data if ex.get('btc'))
-        logging.info(f"[交易所儲備] Coinglass Exchange BTC 總量: {total_btc}")
+        total_btc = sum(float(ex['total_balance']) for ex in data if ex.get('total_balance'))
+        logging.info(f"[交易所儲備] Coinglass Exchange Assets BTC 總量: {total_btc}")
         return int(total_btc)
     except Exception as e:
-        logging.error(f"[交易所儲備] Coinglass 取得失敗: {e}")
+        logging.error(f"[交易所儲備] Coinglass Exchange Assets 取得失敗: {e}")
         return 0
 
 def fetch_btc_holder_distribution():
@@ -48,7 +48,7 @@ def fetch_btc_holder_distribution():
     long_term_btc = 14800000
     result.append({"category": "長期持有者", "btc_count": long_term_btc, "percent": None, "source": "Glassnode"})
     # 3. 交易所儲備（假資料/待補）
-    exchange_btc = fetch_exchange_reserves_coinglass()
+    exchange_btc = fetch_exchange_reserves_coinglass_api()
     result.append({"category": "交易所儲備", "btc_count": exchange_btc, "percent": None, "source": "Coinglass"})
     # 4. 礦工持有（假資料/待補）
     miners_btc = 1500000
