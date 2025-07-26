@@ -1,4 +1,4 @@
-import requests, os, logging, datetime, time
+import requests, os, logging, datetime, time, traceback
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -66,40 +66,67 @@ def fetch_lost_supply_coinglass_selenium():
     url = "https://www.coinglass.com/zh-TW/pro/i/utxo"
     driver = webdriver.Chrome()
     try:
-        print("[DEBUG] 打開 coinglass UTXO 頁面...")
+        print("[DEBUG] 打開 Coinglass UTXO 頁面...")
         driver.get(url)
         time.sleep(7)
         print("[DEBUG] 頁面加載完畢，開始定位圖表...")
 
-        chart = driver.find_element(By.CLASS_NAME, "chartjs-render-monitor")
-        width = chart.size['width']
-        height = chart.size['height']
-        print(f"[DEBUG] 圖表尺寸: width={width}, height={height}")
-
-        actions = ActionChains(driver)
-        actions.move_to_element_with_offset(chart, width-20, height//2).perform()
-        print("[DEBUG] 已模擬滑鼠移動到最新數據點，等待 tooltip 載入...")
-        time.sleep(2)
-
-        # print("Page source:", driver.page_source[:1000])  # 如找不到元素時可用
-        tooltip = driver.find_element(By.CLASS_NAME, "echarts-tooltip")
-        value = tooltip.text
-        print("[DEBUG] Tooltip 內容:", value)
-        return value
-    except Exception as e:
-        print("[ERROR] Selenium 運行失敗:", e)
-        print(traceback.format_exc())
-        with open('debug.html','w',encoding='utf-8') as f:
+        # 先印全頁 HTML，幫助後續 debug（遇到沒抓到時可以分析）
+        with open("utxo_page_debug.html", "w", encoding="utf-8") as f:
             f.write(driver.page_source)
-        return None
+
+        # 嘗試找到所有 "5y~"、"7y~"、"10y~" 對應曲線 legend 元素
+        # 這裡 class 名稱需根據實際網頁微調
+        legend_items = driver.find_elements(By.CSS_SELECTOR, ".legend__item")
+        found = {}
+        for item in legend_items:
+            label = item.text.strip()
+            print("[DEBUG] Legend:", label)
+            if "5y" in label or "7y" in label or "10y" in label:
+                found[label] = item
+
+        if not found:
+            print("[ERROR] 沒有找到 5y~ 7y~ 10y~ 曲線 legend")
+            return 0
+
+        total_lost = 0
+        for key, legend in found.items():
+            try:
+                print(f"[DEBUG] 模擬點擊 legend: {key}")
+                legend.click()
+                time.sleep(1)
+                # 移動到最新點（需針對圖表調整 offset）
+                chart = driver.find_element(By.CLASS_NAME, "chartjs-render-monitor")
+                width = chart.size['width']
+                height = chart.size['height']
+                actions = ActionChains(driver)
+                actions.move_to_element_with_offset(chart, width-20, height//2).perform()
+                time.sleep(2)
+                tooltip = driver.find_element(By.CLASS_NAME, "echarts-tooltip")
+                tooltip_value = tooltip.text
+                print(f"[DEBUG] Tooltip ({key}): {tooltip_value}")
+                # 根據 tooltip 內容取出 BTC 數字（假設格式：10y~: 12345.67 BTC）
+                number = float(''.join([c for c in tooltip_value if (c.isdigit() or c=='.')]))
+                total_lost += number
+            except Exception as e:
+                print(f"[ERROR] 解析 {key} 曲線失敗:", e)
+                print(traceback.format_exc())
+                continue
+
+        print(f"[DEBUG] 合計 Lost Supply (5y~+7y~+10y~): {total_lost}")
+        return int(total_lost)
+    except Exception as e:
+        print("[ERROR] Selenium 爬蟲整體失敗:", e)
+        print(traceback.format_exc())
+        return 0
     finally:
         driver.quit()
 
 def fetch_btc_holder_distribution():
     result = []  # << 這一行必加!
     # 1. 已遺失（假資料/待補真實爬蟲）
-    lost_btc = 3050000
-    result.append({"category": "已遺失", "btc_count": lost_btc, "percent": None, "source": "Glassnode"})
+    lost_btc = fetch_lost_supply_coinglass_selenium()
+    result.append({"category": "已遺失", "btc_count": lost_btc, "percent": None, "source": "Coinglass (Selenium)"})
     # 2. 長期持有者
     lth_btc = fetch_longterm_holder_supply_coinglass()
     result.append({"category": "長期持有者", "btc_count": lth_btc, "percent": None, "source": "Coinglass"})
