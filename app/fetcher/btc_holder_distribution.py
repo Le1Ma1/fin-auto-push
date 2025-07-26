@@ -1,27 +1,93 @@
-import requests
-import datetime
+import requests, datetime, logging, os
 import pandas as pd
 
+COINGLASS_API_KEY = os.getenv("COINGLASS_API_KEY")
+
+def fetch_coinglass_etf_btc_balance():
+    # Coinglass API: Bitcoin ETF List
+    url = "https://open-api-v4.coinglass.com/api/etf/bitcoin/list"
+    headers = {
+        "accept": "application/json",
+        "CG-API-KEY": COINGLASS_API_KEY
+    }
+    try:
+        resp = requests.get(url, headers=headers, timeout=20)
+        data = resp.json().get("data", [])
+        total_btc = 0
+        for etf in data:
+            asset_details = etf.get("asset_details", {})
+            total_btc += float(asset_details.get("btc_holding", 0))
+        logging.info(f"[ETF/Institutional] Coinglass 全ETF持有BTC總量: {total_btc}")
+        return int(total_btc)
+    except Exception as e:
+        logging.error(f"[ETF/Institutional] 取得失敗: {e}")
+        return 0
+
+def fetch_coinglass_exchange_btc():
+    # Coinglass Exchange Reserves BTC
+    url = "https://open-api-v4.coinglass.com/api/exchange/bitcoin/reserves"
+    headers = {
+        "accept": "application/json",
+        "CG-API-KEY": "你的Coinglass API Key"
+    }
+    try:
+        resp = requests.get(url, headers=headers, timeout=20)
+        data = resp.json().get("data", [])
+        total_btc = sum(float(d.get("btc", 0)) for d in data)
+        logging.info(f"[Speculative/交易所] Coinglass 交易所BTC總量: {total_btc}")
+        return int(total_btc)
+    except Exception as e:
+        logging.error(f"[Speculative/交易所] 取得失敗: {e}")
+        return 0
+
+def fetch_unmined_supply():
+    # blockchain.info API
+    try:
+        resp = requests.get("https://blockchain.info/q/unminedblocks")
+        unmined = int(resp.text)
+        block_reward = 3.125  # 如遇減半需更新
+        est_unmined = unmined * block_reward
+        logging.info(f"[Unmined Supply] 未開採BTC: {est_unmined} (區塊數: {unmined})")
+        return est_unmined
+    except Exception as e:
+        logging.error(f"[Unmined Supply] 取得失敗: {e}")
+        return 0
+
 def fetch_btc_holder_distribution():
-    """
-    抓取比特幣持幣分布的六大類：Lost、Long-Term、Speculative、Miners、ETF/Institutional、Unmined
-    支援主流開源來源 API 或網頁爬蟲
-    """
-    # TODO: 實作各來源（此處為假資料，換成你的爬蟲 or API）
     today = datetime.date.today().strftime("%Y-%m-%d")
-    categories = [
-        {"category": "Lost Supply", "btc_count": 3050000, "percent": 14.52, "source": "IntoTheBlock"},
-        {"category": "Long-Term Holder", "btc_count": 14800000, "percent": 70.48, "source": "CryptoQuant"},
-        {"category": "Speculative", "btc_count": 1700000, "percent": 8.1, "source": "Coinglass"},
-        {"category": "Miners", "btc_count": 1500000, "percent": 7.14, "source": "BTC.com"},
-        {"category": "ETF/Institutional", "btc_count": 1050000, "percent": 5.0, "source": "Coinglass"},
-        {"category": "Unmined Supply", "btc_count": 2010000, "percent": 9.57, "source": "blockchain.info"},
-    ]
-    df = pd.DataFrame(categories)
-    df["date"] = today
-    cols = ["date", "category", "btc_count", "percent", "source"]
-    df = df[cols]
-    return df
+    result = []
+
+    # ETF/Institutional
+    etf_btc = fetch_coinglass_etf_btc_balance()
+    result.append({"category": "ETF/Institutional", "btc_count": etf_btc, "percent": None, "source": "Coinglass"})
+
+    # Speculative/交易所
+    speculative_btc = fetch_coinglass_exchange_btc()
+    result.append({"category": "Speculative", "btc_count": speculative_btc, "percent": None, "source": "Coinglass"})
+
+    # Unmined Supply
+    unmined_btc = fetch_unmined_supply()
+    result.append({"category": "Unmined Supply", "btc_count": unmined_btc, "percent": None, "source": "blockchain.info"})
+
+    # 其他分類（這裡以假資料/網頁爬蟲補充）
+    long_term_btc = 14800000
+    lost_btc = 3050000
+    miners_btc = 1500000
+    result.append({"category": "Long-Term Holder", "btc_count": long_term_btc, "percent": None, "source": "CryptoQuant"})
+    result.append({"category": "Lost Supply", "btc_count": lost_btc, "percent": None, "source": "IntoTheBlock"})
+    result.append({"category": "Miners", "btc_count": miners_btc, "percent": None, "source": "BTC.com"})
+
+    # 計算總量，填 percent
+    total = sum(x["btc_count"] for x in result)
+    for x in result:
+        x["percent"] = round(x["btc_count"] / total * 100, 2) if total else None
+        x["date"] = today
+
+    df = pd.DataFrame(result)
+    logging.info(f"[BTC HOLDER] 六分類分布: \n{df}")
+    return df[["date", "category", "btc_count", "percent", "source"]]
 
 if __name__ == "__main__":
-    print(fetch_btc_holder_distribution())
+    logging.basicConfig(level=logging.INFO)
+    df = fetch_btc_holder_distribution()
+    print(df)
