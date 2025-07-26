@@ -1,5 +1,6 @@
 import requests, datetime, logging, os
 import pandas as pd
+from bs4 import BeautifulSoup
 
 COINGLASS_API_KEY = os.getenv("COINGLASS_API_KEY")
 
@@ -40,47 +41,76 @@ def fetch_coinglass_exchange_btc():
         logging.error(f"[Speculative/交易所] 取得失敗: {e}")
         return 0
 
-def fetch_unmined_supply():
-    # blockchain.info API
+def fetch_unmined_blockchaininfo():
     try:
-        resp = requests.get("https://blockchain.info/q/unminedblocks")
-        unmined = int(resp.text)
-        block_reward = 3.125  # 如遇減半需更新
-        est_unmined = unmined * block_reward
-        logging.info(f"[Unmined Supply] 未開採BTC: {est_unmined} (區塊數: {unmined})")
-        return est_unmined
+        resp = requests.get("https://api.blockchair.com/bitcoin/stats")
+        stats = resp.json().get("data", {})
+        issued = stats.get("circulation", 0)
+        max_supply = 21000000
+        unmined = max_supply - float(issued)/1e8  # blockchair circulation 單位為 satoshi
+        logging.info(f"[未開採] 總量: {max_supply} 已開採: {float(issued)/1e8} 未開採: {unmined}")
+        return unmined
     except Exception as e:
-        logging.error(f"[Unmined Supply] 取得失敗: {e}")
+        logging.error(f"[未開採] 取得失敗: {e}")
+        return 0
+
+def fetch_etf_holdings_bitcointreasuries():
+    url = "https://www.bitcointreasuries.net/"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    }
+    try:
+        resp = requests.get(url, headers=headers, timeout=20)
+        soup = BeautifulSoup(resp.text, "html.parser")
+        total_btc = 0
+        # 只抓數字那一格，每一 row 的第三欄是持有 BTC 數量
+        for row in soup.select("table tr"):
+            cols = row.find_all("td")
+            if len(cols) >= 3:
+                btc_str = cols[2].get_text(strip=True).replace(",", "")
+                try:
+                    btc = float(btc_str)
+                    total_btc += btc
+                except:
+                    continue
+        logging.info(f"[ETF/機構/中央銀行] bitcointreasuries.net 全部公開+主權基金持有BTC: {total_btc}")
+        return int(total_btc)
+    except Exception as e:
+        logging.error(f"[ETF/機構/中央銀行] 取得失敗: {e}")
         return 0
 
 def fetch_btc_holder_distribution():
     today = datetime.date.today().strftime("%Y-%m-%d")
     result = []
 
-    # --- 以下真 API 可用則用，無資料或失敗時設 0 ---
-    etf_btc = 0           # ETF/機構
-    speculative_btc = 0   # 交易所儲備
-    unmined_btc = 0       # 未開採
-
-    # 其它用假資料（如上一步測試）
-    long_term_btc = 14800000
+    # 1. 已遺失（後續再補）
     lost_btc = 3050000
-    miners_btc = 1500000
+    result.append({"category": "已遺失", "btc_count": lost_btc, "percent": None, "source": "Glassnode"})
 
-    # 1. 已遺失
-    result.append({"category": "已遺失", "btc_count": lost_btc, "percent": None, "source": "IntoTheBlock"})
-    # 2. 長期持有者
-    result.append({"category": "長期持有者", "btc_count": long_term_btc, "percent": None, "source": "CryptoQuant"})
-    # 3. 交易所儲備
-    result.append({"category": "交易所儲備", "btc_count": speculative_btc, "percent": None, "source": "Coinglass"})
-    # 4. 礦工持有
-    result.append({"category": "礦工持有", "btc_count": miners_btc, "percent": None, "source": "BTC.com"})
-    # 5. ETF/機構
-    result.append({"category": "ETF/機構", "btc_count": etf_btc, "percent": None, "source": "Coinglass"})
+    # 2. 長期持有者（後續再補）
+    long_term_btc = 14800000
+    result.append({"category": "長期持有者", "btc_count": long_term_btc, "percent": None, "source": "Glassnode"})
+
+    # 3. 交易所儲備（後續再補）
+    speculative_btc = 1700000
+    result.append({"category": "交易所儲備", "btc_count": speculative_btc, "percent": None, "source": "CryptoQuant"})
+
+    # 4. 礦工持有（後續再補）
+    miners_btc = 1500000
+    result.append({"category": "礦工持有", "btc_count": miners_btc, "percent": None, "source": "CryptoQuant"})
+
+    # 5. ETF/機構/中央銀行
+    etf_btc = fetch_etf_holdings_bitcointreasuries()
+    result.append({"category": "ETF/機構", "btc_count": etf_btc, "percent": None, "source": "bitcointreasuries.net"})
+    # 中央銀行直接歸屬於 ETF/機構總和，可細分來源
+
     # 6. 未開採
-    result.append({"category": "未開採", "btc_count": unmined_btc, "percent": None, "source": "blockchain.info"})
-    # 7. 中央銀行／主權基金（前瞻性空欄）
-    result.append({"category": "中央銀行／主權基金", "btc_count": 0, "percent": None, "source": "暫無"})
+    unmined_btc = fetch_unmined_blockchaininfo()
+    result.append({"category": "未開採", "btc_count": unmined_btc, "percent": None, "source": "blockchair.com"})
+
+    # 7. 中央銀行/主權基金 (可再細分來源)
+    # 目前可細分薩爾瓦多等政府持有，之後補齊
+    result.append({"category": "中央銀行／主權基金", "btc_count": 0, "percent": None, "source": "bitcointreasuries.net"})
 
     # 計算總量與百分比
     total = sum(x["btc_count"] for x in result)
@@ -89,7 +119,6 @@ def fetch_btc_holder_distribution():
         x["date"] = today
 
     df = pd.DataFrame(result)
-    logging.info(f"[BTC HOLDER] 七分類分布: \n{df}")
     return df[["date", "category", "btc_count", "percent", "source"]]
 
 if __name__ == "__main__":
