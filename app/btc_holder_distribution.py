@@ -1,8 +1,9 @@
-import requests, os, logging, datetime, time, traceback
+import requests, os, logging, datetime, time, traceback, tempfile
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.chrome.options import Options
 
 def fetch_etf_holdings_coinglass():
     url = "https://open-api-v4.coinglass.com/api/etf/bitcoin/list"
@@ -64,7 +65,12 @@ def fetch_longterm_holder_supply_coinglass():
 
 def fetch_lost_supply_coinglass_selenium():
     url = "https://www.coinglass.com/zh-TW/pro/i/utxo"
-    driver = webdriver.Chrome()
+    options = Options()
+    tmp_dir = tempfile.mkdtemp()
+    options.add_argument("--headless=new")
+    options.add_argument(f"--user-data-dir={tmp_dir}")
+    options.add_argument("--incognito")
+    driver = webdriver.Chrome(options=options)
     try:
         print("[DEBUG] 打開 Coinglass UTXO 頁面...")
         driver.get(url)
