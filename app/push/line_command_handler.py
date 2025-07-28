@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import app.fetcher.fetch_etf_daily as fetch_etf_daily
-from app.push.flex_utils import get_full_flex_carousel
+from app.push.flex_utils import get_full_flex_carousel, get_plan_flex_bubble
 from app.push.push_utils import push_flex_to_targets
 from app.btc_holder_distribution import fetch_btc_holder_distribution
 from app.btc_holder_distribution_df import btc_holder_df_to_db
@@ -48,7 +48,7 @@ def handle_message(event):
             FlexSendMessage("訂閱方案介紹", flex_bubble)
         )
         return
-        
+
     # 1. 補救抓ETF
     if text == SECRET_COMMAND:
         print("[DEBUG] SECRET_COMMAND triggered")
