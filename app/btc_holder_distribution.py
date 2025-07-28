@@ -64,28 +64,60 @@ def fetch_longterm_holder_supply_coinglass():
         logging.error(f"[長期持有者] Coinglass 取得失敗: {e}")
         return 0
 
-def fetch_lost_supply_lookintobitcoin():
-    url = "https://www.lookintobitcoin.com/charts/lost-coins-estimate/"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-    }
-    resp = requests.get(url, headers=headers, timeout=20)
-    soup = BeautifulSoup(resp.text, "html.parser")
-    text = soup.get_text()
-    import re
-    match = re.search(r"Lost Coins Estimate.*?([0-9,]+)\s*BTC", text)
-    if match:
-        value = int(match.group(1).replace(",", ""))
-        print(f"[DEBUG] LookIntoBitcoin Lost Coins: {value}")
-        return value
-    print("[ERROR] 無法穩定抓到 Lost Coins 數字")
-    return 0
+def fetch_lost_supply_coinglass_utxo_selenium():
+    url = "https://www.coinglass.com/zh-TW/pro/i/utxo"
+    options = Options()
+    tmp_dir = tempfile.mkdtemp()
+    options.add_argument("--headless=new")
+    options.add_argument(f"--user-data-dir={tmp_dir}")
+    options.add_argument("--incognito")
+    driver = webdriver.Chrome(options=options)
+    try:
+        print("[DEBUG] 打開 Coinglass UTXO 頁面...")
+        driver.get(url)
+        time.sleep(7)
+        print("[DEBUG] 頁面加載完畢，開始定位圖表...")
+
+        driver.save_screenshot("utxo_debug.png")
+        with open("utxo_page_debug.html", "w", encoding="utf-8") as f:
+            f.write(driver.page_source)
+
+        # 找到圖表區，模擬滑鼠到最右側
+        chart = driver.find_element(By.CLASS_NAME, "chartjs-render-monitor")
+        width = chart.size['width']
+        height = chart.size['height']
+        actions = ActionChains(driver)
+        actions.move_to_element_with_offset(chart, width-20, height//2).perform()
+        time.sleep(2)
+
+        # 讀取 tooltip 內容
+        tooltip = driver.find_element(By.CLASS_NAME, "echarts-tooltip")
+        tooltip_text = tooltip.text
+        print("[DEBUG] Tooltip:", tooltip_text)
+
+        # 用正則抓 5y~、7y~、10y~ 對應數字
+        lost_total = 0
+        for k in ["5y~", "7y~", "10y~"]:
+            match = re.search(rf"{k}\s*([\d,\.]+)", tooltip_text)
+            if match:
+                val = float(match.group(1).replace(",", ""))
+                print(f"[DEBUG] {k}: {val}")
+                lost_total += val
+        print(f"[DEBUG] Lost Supply (5y~+7y~+10y~): {lost_total}")
+        return int(lost_total)
+    except Exception as e:
+        print("[ERROR] Selenium 解析失敗:", e)
+        import traceback
+        print(traceback.format_exc())
+        return 0
+    finally:
+        driver.quit()
 
 def fetch_btc_holder_distribution():
     result = []  # << 這一行必加!
     # 1. 已遺失（假資料/待補真實爬蟲）
-    lost_btc = fetch_lost_supply_lookintobitcoin()
-    result.append({"category": "已遺失", "btc_count": lost_btc, "percent": None, "source": "LookIntoBitcoin"})
+    lost_btc = fetch_lost_supply_coinglass_utxo_selenium()
+    result.append({"category": "已遺失", "btc_count": lost_btc, "percent": None, "source": "Coinglass-UTXO(Selenium)"})
     # 2. 長期持有者
     lth_btc = fetch_longterm_holder_supply_coinglass()
     result.append({"category": "長期持有者", "btc_count": lth_btc, "percent": None, "source": "Coinglass"})
