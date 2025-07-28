@@ -296,8 +296,8 @@ def get_plan_flex_bubble():
                     {"type": "text", "text": "即將開放：VIP選幣追蹤、自訂推播、回顧查詢、Telegram同步等高端功能", "wrap": True, "color": "#A5B4FC", "margin": "sm"}
                 ]},
                 {"type": "box", "layout": "horizontal", "margin": "lg", "contents": [
-                    {"type": "button", "action": {"type": "uri", "label": "我要升級", "uri": "https://你的金流或升級頁面網址"}, "style": "primary", "color": "#F59E42"},
-                    {"type": "button", "action": {"type": "uri", "label": "官網詳情", "uri": "https://你的品牌官方網站"}, "style": "secondary", "color": "#1d1e24"}
+                    {"type": "button", "action": {"type": "uri", "label": "我要升級", "uri": "https://leimaitech.com"}, "style": "primary", "color": "#F59E42"},
+                    {"type": "button", "action": {"type": "uri", "label": "官網詳情", "uri": "https://leimaitech.com"}, "style": "secondary", "color": "#1d1e24"}
                 ]}
             ]
         }
