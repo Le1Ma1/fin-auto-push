@@ -113,6 +113,33 @@ def fetch_lost_supply_coinglass_utxo_selenium():
     finally:
         driver.quit()
 
+import requests
+from bs4 import BeautifulSoup
+import re
+
+def fetch_miner_balance_coinank():
+    url = "https://coinank.com/zh-tw/btcChainDate/btcMinerBalance"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    }
+    resp = requests.get(url, headers=headers, timeout=20)
+    soup = BeautifulSoup(resp.text, "html.parser")
+    text = soup.get_text()
+    # 用正則抓 legend 最新一筆數字（一般會有「餘額」或「BTC」等字樣）
+    match = re.search(r"餘額[\s:：]*([\d,]+\.?\d*)", text)
+    if match:
+        value = float(match.group(1).replace(",", ""))
+        print(f"[DEBUG] CoinAnk Miner Balance: {value}")
+        return int(value)
+    # 或直接抓最大數字
+    numbers = [float(m.replace(",","")) for m in re.findall(r"([\d,]+\.\d+)", text)]
+    if numbers:
+        val = int(max(numbers))
+        print(f"[DEBUG] CoinAnk Miner Balance (max): {val}")
+        return val
+    print("[ERROR] 無法穩定抓到 Miner Balance 數字")
+    return 0
+
 def fetch_btc_holder_distribution():
     result = []  # << 這一行必加!
     # 1. 已遺失（假資料/待補真實爬蟲）
@@ -125,8 +152,8 @@ def fetch_btc_holder_distribution():
     exchange_btc = fetch_exchange_reserves_coinglass()
     result.append({"category": "交易所儲備", "btc_count": exchange_btc, "percent": None, "source": "Coinglass"})
     # 4. 礦工持有（假資料/待補）
-    miners_btc = 1500000
-    result.append({"category": "礦工持有", "btc_count": miners_btc, "percent": None, "source": "CryptoQuant"})
+    miner_btc = fetch_miner_balance_coinank()
+    result.append({"category": "礦工持有", "btc_count": miner_btc, "percent": None, "source": "CoinAnk"})
     # 5. ETF/機構
     etf_btc = fetch_etf_holdings_coinglass()
     result.append({"category": "ETF/機構", "btc_count": etf_btc, "percent": None, "source": "Coinglass"})
