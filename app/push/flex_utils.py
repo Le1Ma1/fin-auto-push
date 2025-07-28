@@ -273,3 +273,33 @@ def get_full_flex_carousel():
         "contents": [btc_bubble_14d, btc_bubble_hist, eth_bubble_14d, eth_bubble_hist, flex_asset, flex_btc_holder]
     }
     return carousel
+
+def get_plan_flex_bubble():
+    return {
+        "type": "bubble",
+        "size": "mega",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#191E24",
+            "contents": [
+                {"type": "text", "text": "訂閱方案介紹", "weight": "bold", "size": "xl", "color": "#F5FAFE"},
+                {"type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm", "contents": [
+                    {"type": "text", "text": "進階版 Pro", "size": "lg", "weight": "bold", "color": "#34d399"},
+                    {"type": "text", "text": "每月 NT$199｜年繳 NT$1,999", "size": "md", "color": "#A3E635"},
+                    {"type": "text", "text": "每日自動推播\n• BTC/ETH/ETF 六分類\n• 持幣結構圖表\n• 全球資產排行\n• 獨家精華摘要", "wrap": True, "color": "#F5FAFE", "margin": "sm"}
+                ]},
+                {"type": "separator", "margin": "md"},
+                {"type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm", "contents": [
+                    {"type": "text", "text": "專業版 Elite（敬請期待）", "size": "lg", "weight": "bold", "color": "#60a5fa"},
+                    {"type": "text", "text": "每月 NT$399｜年繳 NT$3,999", "size": "md", "color": "#A3E635"},
+                    {"type": "text", "text": "即將開放：VIP選幣追蹤、自訂推播、回顧查詢、Telegram同步等高端功能", "wrap": True, "color": "#A5B4FC", "margin": "sm"}
+                ]},
+                {"type": "box", "layout": "horizontal", "margin": "lg", "contents": [
+                    {"type": "button", "action": {"type": "uri", "label": "我要升級", "uri": "https://你的金流或升級頁面網址"}, "style": "primary", "color": "#F59E42"},
+                    {"type": "button", "action": {"type": "uri", "label": "官網詳情", "uri": "https://你的品牌官方網站"}, "style": "secondary", "color": "#1d1e24"}
+                ]}
+            ]
+        }
+    }
+

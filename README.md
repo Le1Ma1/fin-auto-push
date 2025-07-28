@@ -3,34 +3,47 @@
 整合 Coinglass 官方 API、Supabase 雲端資料庫，支援定時同步、Bubble/Bar/Line 圖表自動產生與圖床推播。
 
 ```
-fin-auto-push/
-├── .env                       # 各種金鑰、LINE帳號、推播ID、API Key 設定
-├── .gitignore                 # Git 版控排除
-├── NotoSansTC-Regular.ttf     # 中文字型
-├── README.md                  # 專案說明
-├── requirements.txt           # Python 套件需求
-├── Coinglass 對接文檔.txt    # Coinglass API 使用與測試說明
-└── app/
+FIN-AUTO-PUSH/
+├── __pycache__/                      # Python 快取目錄
+├── .github/                          # GitHub Actions、Issue 模板等
+├── .env                              # 環境變數檔（API Key、LINE Token、Supabase 參數…）
+├── .env.test                         # 測試用環境變數
+├── .gitignore                        # Git 忽略規則
+├── NotoSansTC-Regular.ttf            # 中文字型，用於 matplotlib 圖表
+├── README.md                         # 專案說明
+├── requirements.txt                  # Python 套件清單
+├── scheduler.py                      # APScheduler 排程主程式：定時抓資料 & 推播
+└── app/                              # 核心程式碼
+    ├── __pycache__/                  # Python 快取
+    ├── fetcher/                      # 資料抓取（API or 爬蟲）
+    │   ├── __pycache__/
+    │   ├── __init__.py
+    │   ├── asset_ranking.py          # 爬取全球資產市值前 10 名
+    │   ├── coinglass_etf.py          # Coinglass API：ETF flow 原始 JSON
+    │   ├── daily_asset_snapshot.py   # 每日資產榜快照並上傳 Supabase
+    │   ├── fetch_etf_daily.py        # 每日近 N 日 BTC/ETH ETF Flow
+    │   └── fetch_etf_history.py      # 歷史 ETF Flow 數據（最多 2000 天）
+    │
+    ├── pipeline/                     # DataFrame 清洗與處理
+    │   ├── __pycache__/
+    │   ├── __init__.py
+    │   ├── asset_ranking_df.py       # 資產榜 JSON → DataFrame
+    │   └── processor.py              # Coinglass JSON → ETF Flow DataFrame
+    │
+    ├── push/                         # 推播 & Flex message 組裝
+    │   ├── __pycache__/
+    │   ├── __init__.py
+    │   ├── flex_utils.py             # 組合五合一 Carousel（ETF, 資產榜, BTC六分類）
+    │   ├── line_command_handler.py   # FastAPI LINE Webhook + 管理指令
+    │   ├── push_btc_holder.py        # BTC 六分類持幣 Flex bubble
+    │   ├── push_etf_chart.py         # 圖片上傳 imgbb，回傳 URL
+    │   └── push_utils.py             # 多目標 LINE 推播
+    │
     ├── __init__.py
-    ├── db.py                  # 與 Supabase 互動（查、寫、upsert）
-    ├── plot_chart.py          # 產生所有 bar/line/橫條圖（matplotlib）
-    ├── scheduler.py           # APScheduler 任務排程（抓資料/推播）
-    ├── utils.py               # 單位、ETF Flex表格、日期判斷等共用
-    ├── fetcher/               # ETF/資產榜 API 爬蟲（抓資料）
-    │   ├── __init__.py
-    │   ├── asset_ranking.py
-    │   ├── coinglass_etf.py
-    │   ├── daily_asset_snapshot.py
-    │   ├── fetch_etf_daily.py
-    │   ├── fetch_etf_history.py
-    ├── pipeline/              # DataFrame/欄位處理
-    │   ├── __init__.py
-    │   ├── asset_ranking_df.py
-    │   ├── processor.py
-    └── push/                  # 所有推播/訊息相關工具
-        ├── __init__.py
-        ├── flex_utils.py      # 組合五合一 Flex Bubble（Carousel）
-        ├── line_command_handler.py # FastAPI Webhook，支援 SECRET 管理指令
-        ├── push_etf_chart.py  # imgbb 圖片上傳
-        └── push_utils.py      # 多對象推播（LINE Bot 多群/用戶自動推播）
+    ├── btc_holder_distribution.py    # BTC 六大類持幣爬蟲與組裝邏輯
+    ├── btc_holder_distribution_df.py # 將持幣 DataFrame 清洗格式化
+    ├── db.py                         # Supabase 資料庫查詢/Upsert/Delete
+    ├── plot_chart.py                # ETF & 資產榜 Bar/Line/橫條圖
+    ├── plot_chart_btc_holder.py     # BTC 六分類 圓餅圖 & 面積堆疊圖
+    └── utils.py                     # 共用工具：單位換算、人類易讀格式、日期判斷
 ```
