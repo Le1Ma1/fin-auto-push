@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from linebot import LineBotApi, WebhookHandler
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
 import app.fetcher.fetch_etf_daily as fetch_etf_daily
 from app.push.flex_utils import get_full_flex_carousel, get_plan_flex_bubble
 from app.push.push_utils import push_flex_to_targets
