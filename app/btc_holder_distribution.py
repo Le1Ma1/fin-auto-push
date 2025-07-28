@@ -77,19 +77,23 @@ def fetch_lost_supply_coinglass_selenium():
         time.sleep(7)
         print("[DEBUG] 頁面加載完畢，開始定位圖表...")
 
-        # 先印全頁 HTML，幫助後續 debug（遇到沒抓到時可以分析）
+        driver.save_screenshot("utxo_debug.png")
         with open("utxo_page_debug.html", "w", encoding="utf-8") as f:
             f.write(driver.page_source)
 
-        # 嘗試找到所有 "5y~"、"7y~"、"10y~" 對應曲線 legend 元素
-        # 這裡 class 名稱需根據實際網頁微調
-        legend_items = driver.find_elements(By.CSS_SELECTOR, ".legend__item")
+        # ====== 修正這裡 ======
         found = {}
+        legend_items = driver.find_elements(By.XPATH, "//*[contains(text(), '5y')] | //*[contains(text(), '7y')] | //*[contains(text(), '10y')]")
         for item in legend_items:
             label = item.text.strip()
-            print("[DEBUG] Legend:", label)
-            if "5y" in label or "7y" in label or "10y" in label:
-                found[label] = item
+            print("[DEBUG] Legend XPATH:", label)
+            # 你要的 key 可以 "5y", "7y", "10y" 直接簡化
+            if "5y" in label:
+                found["5y"] = item
+            elif "7y" in label:
+                found["7y"] = item
+            elif "10y" in label:
+                found["10y"] = item
 
         if not found:
             print("[ERROR] 沒有找到 5y~ 7y~ 10y~ 曲線 legend")
