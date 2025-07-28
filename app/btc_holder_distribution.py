@@ -140,34 +140,83 @@ def fetch_miner_balance_coinank():
     print("[ERROR] 無法穩定抓到 Miner Balance 數字")
     return 0
 
-def fetch_btc_holder_distribution():
-    result = []  # << 這一行必加!
-    # 1. 已遺失（假資料/待補真實爬蟲）
-    lost_btc = fetch_lost_supply_coinglass_utxo_selenium()
-    result.append({"category": "已遺失", "btc_count": lost_btc, "percent": None, "source": "Coinglass-UTXO(Selenium)"})
-    # 2. 長期持有者
-    lth_btc = fetch_longterm_holder_supply_coinglass()
-    result.append({"category": "長期持有者", "btc_count": lth_btc, "percent": None, "source": "Coinglass"})
-    # 3. 交易所儲備
-    exchange_btc = fetch_exchange_reserves_coinglass()
-    result.append({"category": "交易所儲備", "btc_count": exchange_btc, "percent": None, "source": "Coinglass"})
-    # 4. 礦工持有（假資料/待補）
-    miner_btc = fetch_miner_balance_coinank()
-    result.append({"category": "礦工持有", "btc_count": miner_btc, "percent": None, "source": "CoinAnk"})
-    # 5. ETF/機構
-    etf_btc = fetch_etf_holdings_coinglass()
-    result.append({"category": "ETF/機構", "btc_count": etf_btc, "percent": None, "source": "Coinglass"})
-    # 6. 未開採（假資料/待補）
-    unmined_btc = 1100000
-    result.append({"category": "未開採", "btc_count": unmined_btc, "percent": None, "source": "blockchair.com"})
-    # 7. 中央銀行／主權基金
-    result.append({"category": "中央銀行／主權基金", "btc_count": 0, "percent": None, "source": "Coinglass"})
+def fetch_unmined_supply_blockchair():
+    url = "https://api.blockchair.com/bitcoin/stats"
+    try:
+        resp = requests.get(url, timeout=10)
+        data = resp.json()['data']
+        # circulation 單位是 satoshi（1 BTC = 1e8 sat）
+        circulation_btc = float(data['circulation']) / 1e8
+        unmined = 21000000 - circulation_btc
+        print(f"[DEBUG] 已開採：{circulation_btc:.2f} BTC，未開採：{unmined:.2f} BTC")
+        return int(unmined)
+    except Exception as e:
+        print("[ERROR] 未開採 取得失敗:", e)
+        return 0
 
-    # 加入日期與計算百分比
+def fetch_btc_holder_distribution():
+    result = []
+
+    # 五大類直接抓
+    lth_btc = fetch_longterm_holder_supply_coinglass()
+    exchange_btc = fetch_exchange_reserves_coinglass()
+    etf_btc = fetch_etf_holdings_coinglass()
+    unmined_btc = fetch_unmined_supply_blockchair()
+    central_btc = 0  # 中央銀行
+
+    # 計算其他類
+    major_sum = lth_btc + exchange_btc + etf_btc + unmined_btc + central_btc
+    other_btc = 21000000 - major_sum
+
+    # 1. 長期持有者
+    result.append({
+        "category": "長期持有者",
+        "btc_count": lth_btc,
+        "percent": None,
+        "source": "Coinglass"
+    })
+    # 2. 交易所儲備
+    result.append({
+        "category": "交易所儲備",
+        "btc_count": exchange_btc,
+        "percent": None,
+        "source": "Coinglass"
+    })
+    # 3. ETF/機構
+    result.append({
+        "category": "ETF/機構",
+        "btc_count": etf_btc,
+        "percent": None,
+        "source": "Coinglass"
+    })
+    # 4. 未開採
+    result.append({
+        "category": "未開採",
+        "btc_count": unmined_btc,
+        "percent": None,
+        "source": "blockchair.com"
+    })
+    # 5. 中央銀行／主權基金
+    result.append({
+        "category": "中央銀行／主權基金",
+        "btc_count": central_btc,
+        "percent": None,
+        "source": "預留"
+    })
+    # 6. 其他（包含已遺失、礦工持有）
+    result.append({
+        "category": "其他",
+        "btc_count": other_btc,
+        "percent": None,
+        "source": "自動計算：2100萬 - 其它所有類"
+    })
+
+    # 保證總和 2100萬
     total = sum(x["btc_count"] for x in result)
     for x in result:
         x["percent"] = round(x["btc_count"] / total * 100, 2) if total else None
         x["date"] = datetime.date.today().strftime("%Y-%m-%d")
 
     df = pd.DataFrame(result)
+    print(f"[DEBUG] 總和：{total} BTC")  # 可印出 debug
     return df[["date", "category", "btc_count", "percent", "source"]]
