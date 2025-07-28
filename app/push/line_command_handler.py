@@ -42,12 +42,12 @@ def handle_message(event):
         return
 
     if text in ["/方案介紹", "方案介紹"]:
-    flex_bubble = get_plan_flex_bubble()
-    line_bot_api.reply_message(
-        event.reply_token,
-        FlexSendMessage("訂閱方案介紹", flex_bubble)
-    )
-    return
+        flex_bubble = get_plan_flex_bubble()
+        line_bot_api.reply_message(
+            event.reply_token,
+            FlexSendMessage("訂閱方案介紹", flex_bubble)
+        )
+        return
 
     # 1. 補救抓ETF
     if text == SECRET_COMMAND:
