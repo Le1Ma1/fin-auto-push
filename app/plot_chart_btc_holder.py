@@ -23,25 +23,3 @@ def plot_btc_holder_pie(df, date_str):
     plt.savefig(img_path, dpi=200, bbox_inches="tight", transparent=False)
     plt.close()
     return img_path
-
-def plot_btc_holder_stacked(df_hist):
-    """
-    畫面積堆疊圖：持幣結構隨時間變化
-    """
-    df = df_hist.pivot(index='date', columns='category', values='btc_count').fillna(0)
-    df = df.sort_index()
-    fig, ax = plt.subplots(figsize=(14, 6))
-    df.plot.area(ax=ax, alpha=0.8)
-    ax.set_title("BTC 六大類持幣分布隨時間變化", fontsize=18, color="white")
-    ax.set_xlabel("日期", color="white")
-    ax.set_ylabel("BTC 數量", color="white")
-    ax.legend(loc='upper left')
-    fig.patch.set_facecolor("#191E24")
-    ax.set_facecolor("#191E24")
-    ax.tick_params(axis='x', colors='white')
-    ax.tick_params(axis='y', colors='white')
-    plt.tight_layout()
-    img_path = "btc_holder_stacked.png"
-    plt.savefig(img_path, dpi=200, bbox_inches="tight", transparent=False)
-    plt.close()
-    return img_path
