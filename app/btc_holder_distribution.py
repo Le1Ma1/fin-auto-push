@@ -63,80 +63,28 @@ def fetch_longterm_holder_supply_coinglass():
         logging.error(f"[長期持有者] Coinglass 取得失敗: {e}")
         return 0
 
-def fetch_lost_supply_coinglass_selenium():
-    url = "https://www.coinglass.com/zh-TW/pro/i/utxo"
-    options = Options()
-    tmp_dir = tempfile.mkdtemp()
-    options.add_argument("--headless=new")
-    options.add_argument(f"--user-data-dir={tmp_dir}")
-    options.add_argument("--incognito")
-    driver = webdriver.Chrome(options=options)
-    try:
-        print("[DEBUG] 打開 Coinglass UTXO 頁面...")
-        driver.get(url)
-        time.sleep(7)
-        print("[DEBUG] 頁面加載完畢，開始定位圖表...")
-
-        driver.save_screenshot("utxo_debug.png")
-        with open("utxo_page_debug.html", "w", encoding="utf-8") as f:
-            f.write(driver.page_source)
-
-        # ====== 修正這裡 ======
-        found = {}
-        legend_items = driver.find_elements(By.XPATH, "//*[contains(text(), '5y')] | //*[contains(text(), '7y')] | //*[contains(text(), '10y')]")
-        for item in legend_items:
-            label = item.text.strip()
-            print("[DEBUG] Legend XPATH:", label)
-            # 你要的 key 可以 "5y", "7y", "10y" 直接簡化
-            if "5y" in label:
-                found["5y"] = item
-            elif "7y" in label:
-                found["7y"] = item
-            elif "10y" in label:
-                found["10y"] = item
-
-        if not found:
-            print("[ERROR] 沒有找到 5y~ 7y~ 10y~ 曲線 legend")
-            return 0
-
-        total_lost = 0
-        for key, legend in found.items():
-            try:
-                print(f"[DEBUG] 模擬點擊 legend: {key}")
-                legend.click()
-                time.sleep(1)
-                # 移動到最新點（需針對圖表調整 offset）
-                chart = driver.find_element(By.CLASS_NAME, "chartjs-render-monitor")
-                width = chart.size['width']
-                height = chart.size['height']
-                actions = ActionChains(driver)
-                actions.move_to_element_with_offset(chart, width-20, height//2).perform()
-                time.sleep(2)
-                tooltip = driver.find_element(By.CLASS_NAME, "echarts-tooltip")
-                tooltip_value = tooltip.text
-                print(f"[DEBUG] Tooltip ({key}): {tooltip_value}")
-                # 根據 tooltip 內容取出 BTC 數字（假設格式：10y~: 12345.67 BTC）
-                number = float(''.join([c for c in tooltip_value if (c.isdigit() or c=='.')]))
-                total_lost += number
-            except Exception as e:
-                print(f"[ERROR] 解析 {key} 曲線失敗:", e)
-                print(traceback.format_exc())
-                continue
-
-        print(f"[DEBUG] 合計 Lost Supply (5y~+7y~+10y~): {total_lost}")
-        return int(total_lost)
-    except Exception as e:
-        print("[ERROR] Selenium 爬蟲整體失敗:", e)
-        print(traceback.format_exc())
-        return 0
-    finally:
-        driver.quit()
+def fetch_lost_supply_lookintobitcoin():
+    url = "https://www.lookintobitcoin.com/charts/lost-coins-estimate/"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    }
+    resp = requests.get(url, headers=headers, timeout=20)
+    soup = BeautifulSoup(resp.text, "html.parser")
+    text = soup.get_text()
+    import re
+    match = re.search(r"Lost Coins Estimate.*?([0-9,]+)\s*BTC", text)
+    if match:
+        value = int(match.group(1).replace(",", ""))
+        print(f"[DEBUG] LookIntoBitcoin Lost Coins: {value}")
+        return value
+    print("[ERROR] 無法穩定抓到 Lost Coins 數字")
+    return 0
 
 def fetch_btc_holder_distribution():
     result = []  # << 這一行必加!
     # 1. 已遺失（假資料/待補真實爬蟲）
-    lost_btc = fetch_lost_supply_coinglass_selenium()
-    result.append({"category": "已遺失", "btc_count": lost_btc, "percent": None, "source": "Coinglass (Selenium)"})
+    lost_btc = fetch_lost_supply_lookintobitcoin()
+    result.append({"category": "已遺失", "btc_count": lost_btc, "percent": None, "source": "LookIntoBitcoin"})
     # 2. 長期持有者
     lth_btc = fetch_longterm_holder_supply_coinglass()
     result.append({"category": "長期持有者", "btc_count": lth_btc, "percent": None, "source": "Coinglass"})
