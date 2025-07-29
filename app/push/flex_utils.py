@@ -274,7 +274,20 @@ def get_full_flex_carousel():
     }
     return carousel
 
-def get_plan_flex_bubble():
+def get_plan_flex_bubble(
+    unlocked_count=1,  # 已解鎖神秘數據數（可動態決定，預設1/4）
+    total_mystery=4,   # 神秘數據總數
+):
+    # 動態產生進度條（4格圓點）
+    progress_circles = []
+    for i in range(total_mystery):
+        progress_circles.append({
+            "type": "icon",
+            "url": "https://cdn-icons-png.flaticon.com/512/32/32355.png" if i < unlocked_count else "https://cdn-icons-png.flaticon.com/512/1828/1828884.png",
+            "size": "sm",
+            "margin": "xs"
+        })
+
     return {
         "type": "bubble",
         "size": "mega",
@@ -282,31 +295,167 @@ def get_plan_flex_bubble():
             "type": "box",
             "layout": "vertical",
             "backgroundColor": "#191E24",
+            "paddingAll": "24px",
             "contents": [
                 # 標題
-                {"type": "text", "text": "訂閱方案介紹", "weight": "bold", "size": "xl", "color": "#F5FAFE"},
+                {
+                    "type": "text",
+                    "text": "訂閱方案介紹",
+                    "weight": "bold",
+                    "size": "xl",
+                    "color": "#F5FAFE",
+                    "align": "center"
+                },
+
                 # Pro 進階版
-                {"type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm", "contents": [
-                    {"type": "text", "text": "進階版 Pro", "size": "lg", "weight": "bold", "color": "#34d399"},
-                    {"type": "text", "text": "每月 NT$199｜年繳 NT$1,999", "size": "md", "color": "#A3E635"},
-                    {"type": "text", 
-                     "text": "每日自動推播\n• BTC/ETH/ETF 六分類\n• 持幣結構圖表\n• 全球資產排行\n• 獨家精華摘要\n🎁 將陸續解鎖四項神秘數據（全數免費升級，不加價！）",
-                     "wrap": True, "color": "#F5FAFE", "margin": "sm"}
-                ]},
-                {"type": "separator", "margin": "md"},
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "margin": "xl",
+                    "spacing": "sm",
+                    "paddingAll": "18px",
+                    "backgroundColor": "#23272F",
+                    "cornerRadius": "18px",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "進階版 Pro",
+                            "size": "lg",
+                            "weight": "bold",
+                            "color": "#34d399"
+                        },
+                        {
+                            "type": "text",
+                            "text": "每月 NT$199｜年繳 NT$1,999",
+                            "size": "md",
+                            "color": "#A3E635",
+                            "margin": "sm"
+                        },
+                        # 免費試用提示
+                        {
+                            "type": "text",
+                            "text": "🆓 新戶 10 天免費試用",
+                            "size": "sm",
+                            "color": "#F59E42",
+                            "weight": "bold",
+                            "margin": "sm"
+                        },
+                        {
+                            "type": "text",
+                            "text": (
+                                "每日自動推播\n"
+                                "• BTC/ETH/ETF 六分類\n"
+                                "• 持幣結構圖表\n"
+                                "• 全球資產排行\n"
+                                "• 獨家精華摘要\n"
+                                "🎁 將陸續解鎖四項神秘數據（全數免費升級，不加價！）"
+                            ),
+                            "wrap": True,
+                            "color": "#F5FAFE",
+                            "margin": "md"
+                        },
+                        # 神秘數據進度條
+                        {
+                            "type": "box",
+                            "layout": "horizontal",
+                            "spacing": "xs",
+                            "margin": "md",
+                            "contents": [
+                                {
+                                    "type": "text",
+                                    "text": f"神秘數據解鎖進度：{unlocked_count}/{total_mystery}",
+                                    "size": "xs",
+                                    "color": "#F59E42",
+                                    "weight": "bold",
+                                    "flex": 6
+                                },
+                                {
+                                    "type": "box",
+                                    "layout": "horizontal",
+                                    "spacing": "xs",
+                                    "flex": 6,
+                                    "contents": progress_circles
+                                }
+                            ]
+                        }
+                    ]
+                },
+
+                # 分隔線
+                {"type": "separator", "margin": "xl"},
+
                 # Elite 專業版
-                {"type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm", "contents": [
-                    {"type": "text", "text": "專業版 Elite（敬請期待）", "size": "lg", "weight": "bold", "color": "#60a5fa"},
-                    {"type": "text", "text": "每月 NT$399｜年繳 NT$3,999", "size": "md", "color": "#A3E635"},
-                    {"type": "text", 
-                     "text": "即將開放：\n• VIP 巨鯨資金動向追蹤（Hyperliquid/鏈上大戶異動報警）\n• ETF 產品歷史查詢＆深度數據（折溢價、AUM、市值排行）\n• 自訂條件推播／智能預警（價格、資金流、ETF、巨鯨異動）\n• 高階持幣結構動態／ETF間資金流可視化\n• 全球資產排行／多幣種資金流查詢",
-                     "wrap": True, "color": "#A5B4FC", "margin": "sm"}
-                ]},
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "margin": "xl",
+                    "spacing": "sm",
+                    "paddingAll": "18px",
+                    "backgroundColor": "#23272F",
+                    "cornerRadius": "18px",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "專業版 Elite（敬請期待）",
+                            "size": "lg",
+                            "weight": "bold",
+                            "color": "#60a5fa"
+                        },
+                        {
+                            "type": "text",
+                            "text": "每月 NT$399｜年繳 NT$3,999",
+                            "size": "md",
+                            "color": "#A3E635",
+                            "margin": "sm"
+                        },
+                        {
+                            "type": "text",
+                            "text": (
+                                "即將開放：\n"
+                                "• VIP 巨鯨資金動向追蹤（Hyperliquid/鏈上大戶異動報警）\n"
+                                "• ETF 產品歷史查詢＆深度數據（折溢價、AUM、市值排行）\n"
+                                "• 自訂條件推播／智能預警（價格、資金流、ETF、巨鯨異動）\n"
+                                "• 高階持幣結構動態／ETF間資金流可視化\n"
+                                "• 全球資產排行／多幣種資金流查詢"
+                            ),
+                            "wrap": True,
+                            "color": "#A5B4FC",
+                            "margin": "md"
+                        }
+                    ]
+                },
+
                 # 按鈕區
-                {"type": "box", "layout": "horizontal", "margin": "lg", "contents": [
-                    {"type": "button", "action": {"type": "uri", "label": "我要升級", "uri": "https://lin.ee/fpZadc4"}, "style": "primary", "color": "#F59E42"},
-                    {"type": "button", "action": {"type": "uri", "label": "官網詳情", "uri": "https://leimaitech.com"}, "style": "secondary", "color": "#1d1e24"}
-                ]}
+                {
+                    "type": "box",
+                    "layout": "horizontal",
+                    "margin": "xl",
+                    "spacing": "md",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "action": {
+                                "type": "uri",
+                                "label": "我要升級",
+                                "uri": "https://lin.ee/fpZadc4"
+                            },
+                            "style": "primary",
+                            "color": "#F59E42",
+                            "margin": "none"
+                        },
+                        {
+                            "type": "button",
+                            "action": {
+                                "type": "uri",
+                                "label": "官網詳情",
+                                "uri": "https://leimaitech.com"
+                            },
+                            "style": "secondary",
+                            "color": "#1d1e24",
+                            "margin": "none"
+                        }
+                    ]
+                }
             ]
         }
     }
