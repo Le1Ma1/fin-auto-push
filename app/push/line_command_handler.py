@@ -1,3 +1,35 @@
+import os
+from dotenv import load_dotenv
+from fastapi import FastAPI, Request
+from linebot import LineBotApi, WebhookHandler
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
+import app.fetcher.fetch_etf_daily as fetch_etf_daily
+from app.push.flex_utils import get_full_flex_carousel, get_plan_flex_bubble
+from app.push.push_utils import push_flex_to_targets
+from app.btc_holder_distribution import fetch_btc_holder_distribution
+from app.btc_holder_distribution_df import btc_holder_df_to_db
+from app.db import upsert_btc_holder_distribution
+
+app = FastAPI()
+load_dotenv()
+CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
+ADMIN_USER_ID = os.getenv("LINE_ADMIN_USER_ID")
+line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
+handler = WebhookHandler(CHANNEL_SECRET)
+
+SECRET_COMMAND = "!update_data"
+SECRET_PUSH_TEST = "!test_push"
+SECRET_FORCE_SYNC = "!force_sync"
+SECRET_HOLDER_UPSERT = "!test_holder_upsert"
+
+@app.post("/callback")
+async def callback(request: Request):
+    body = await request.body()
+    signature = request.headers.get("X-Line-Signature", "")
+    handler.handle(body.decode(), signature)
+    return "OK"
+
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_id = event.source.user_id
