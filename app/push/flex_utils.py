@@ -285,7 +285,8 @@ def get_plan_flex_bubble(
             "type": "icon",
             "url": "https://cdn-icons-png.flaticon.com/512/32/32355.png" if i < unlocked_count else "https://cdn-icons-png.flaticon.com/512/1828/1828884.png",
             "size": "sm",
-            "margin": "xs"
+            "margin": "xs",
+            "flex": 1
         })
 
     return {
@@ -369,13 +370,7 @@ def get_plan_flex_bubble(
                                     "weight": "bold",
                                     "flex": 6
                                 },
-                                {
-                                    "type": "box",
-                                    "layout": "horizontal",
-                                    "spacing": "xs",
-                                    "flex": 6,
-                                    "contents": progress_circles
-                                }
+                                *progress_circles  # 直接攤平，不要再包一個 box
                             ]
                         }
                     ]
