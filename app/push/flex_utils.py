@@ -283,23 +283,30 @@ def get_plan_flex_bubble():
             "layout": "vertical",
             "backgroundColor": "#191E24",
             "contents": [
+                # 標題
                 {"type": "text", "text": "訂閱方案介紹", "weight": "bold", "size": "xl", "color": "#F5FAFE"},
+                # Pro 進階版
                 {"type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm", "contents": [
                     {"type": "text", "text": "進階版 Pro", "size": "lg", "weight": "bold", "color": "#34d399"},
                     {"type": "text", "text": "每月 NT$199｜年繳 NT$1,999", "size": "md", "color": "#A3E635"},
-                    {"type": "text", "text": "每日自動推播\n• BTC/ETH/ETF 六分類\n• 持幣結構圖表\n• 全球資產排行\n• 獨家精華摘要", "wrap": True, "color": "#F5FAFE", "margin": "sm"}
+                    {"type": "text", 
+                     "text": "每日自動推播\n• BTC/ETH/ETF 六分類\n• 持幣結構圖表\n• 全球資產排行\n• 獨家精華摘要\n🎁 將陸續解鎖四項神秘數據（全數免費升級，不加價！）",
+                     "wrap": True, "color": "#F5FAFE", "margin": "sm"}
                 ]},
                 {"type": "separator", "margin": "md"},
+                # Elite 專業版
                 {"type": "box", "layout": "vertical", "margin": "lg", "spacing": "sm", "contents": [
                     {"type": "text", "text": "專業版 Elite（敬請期待）", "size": "lg", "weight": "bold", "color": "#60a5fa"},
                     {"type": "text", "text": "每月 NT$399｜年繳 NT$3,999", "size": "md", "color": "#A3E635"},
-                    {"type": "text", "text": "即將開放：VIP選幣追蹤、自訂推播、回顧查詢、Telegram同步等高端功能", "wrap": True, "color": "#A5B4FC", "margin": "sm"}
+                    {"type": "text", 
+                     "text": "即將開放：\n• VIP 巨鯨資金動向追蹤（Hyperliquid/鏈上大戶異動報警）\n• ETF 產品歷史查詢＆深度數據（折溢價、AUM、市值排行）\n• 自訂條件推播／智能預警（價格、資金流、ETF、巨鯨異動）\n• 高階持幣結構動態／ETF間資金流可視化\n• 全球資產排行／多幣種資金流查詢",
+                     "wrap": True, "color": "#A5B4FC", "margin": "sm"}
                 ]},
+                # 按鈕區
                 {"type": "box", "layout": "horizontal", "margin": "lg", "contents": [
-                    {"type": "button", "action": {"type": "uri", "label": "我要升級", "uri": "https://leimaitech.com"}, "style": "primary", "color": "#F59E42"},
+                    {"type": "button", "action": {"type": "uri", "label": "我要升級", "uri": "https://lin.ee/fpZadc4"}, "style": "primary", "color": "#F59E42"},
                     {"type": "button", "action": {"type": "uri", "label": "官網詳情", "uri": "https://leimaitech.com"}, "style": "secondary", "color": "#1d1e24"}
                 ]}
             ]
         }
     }
-
