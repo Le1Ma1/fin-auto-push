@@ -279,7 +279,7 @@ def get_plan_flex_bubble(
     total_mystery=4,   # 神秘數據總數
 ):
     # 動態產生進度條（4格圓點）
-    capped_mystery = min(total_mystery, 4)
+    capped_mystery = min(capped_mystery, 4)
     progress_circles = []
     for i in range(capped_mystery):
         progress_circles.append({
