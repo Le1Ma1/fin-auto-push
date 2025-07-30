@@ -382,7 +382,10 @@ def get_plan_flex_bubble():
                             },
                             "style": "primary",
                             "color": "#F59E42",
-                            "margin": "none"
+                            "height": "sm",
+                            "margin": "none",
+                            "gravity": "center",
+                            "cornerRadius": "10px"
                         },
                         {
                             "type": "button",
@@ -392,9 +395,12 @@ def get_plan_flex_bubble():
                                 "uri": "https://leimaitech.com"
                             },
                             "style": "secondary",
-                            "color": "#353941",  # 比深色再亮一點
+                            "color": "#40444A",        # 亮灰色，深灰但比背景亮
+                            "height": "sm",
                             "margin": "none",
-                            "height": "sm"
+                            "gravity": "center",
+                            "cornerRadius": "10px",
+                            "textColor": "#F5FAFE"     # 如果 Flex 支援，這一行讓字強制白色
                         }
                     ]
                 }
