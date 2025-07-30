@@ -275,12 +275,13 @@ def get_full_flex_carousel():
     return carousel
 
 def get_plan_flex_bubble(
-    unlocked_count=1,  # 已解鎖神秘數據數（可動態決定，預設1/4）
+    unlocked_count=0,  # 已解鎖神秘數據數（可動態決定，預設1/4）
     total_mystery=4,   # 神秘數據總數
 ):
     # 動態產生進度條（4格圓點）
+    capped_mystery = min(total_mystery, 4)
     progress_circles = []
-    for i in range(total_mystery):
+    for i in range(capped_mystery):
         progress_circles.append({
             "type": "icon",
             "url": "https://cdn-icons-png.flaticon.com/512/32/32355.png" if i < unlocked_count else "https://cdn-icons-png.flaticon.com/512/1828/1828884.png",
