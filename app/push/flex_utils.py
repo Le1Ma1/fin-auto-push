@@ -267,26 +267,7 @@ def get_full_flex_carousel():
     }
     return carousel
 
-def get_plan_flex_bubble(
-    unlocked_count=0,  # 已解鎖神秘數據數（可動態決定，預設 0）
-    total_mystery=4,   # 神秘數據總數（最多 4 格）
-):
-    # 極致防呆：icon 數量必須 1~4 格，亮格不能超過最大
-    capped_mystery = min(max(int(total_mystery), 1), 4)
-    safe_unlocked = min(max(int(unlocked_count), 0), capped_mystery)
-
-    # 動態進度條 icon 陣列
-    progress_circles = []
-    for i in range(capped_mystery):
-        progress_circles.append({
-            "type": "icon",
-            "url": "https://cdn-icons-png.flaticon.com/512/32/32355.png" if i < safe_unlocked else "https://cdn-icons-png.flaticon.com/512/1828/1828884.png",
-            "size": "sm",
-            "margin": "xs",
-            "flex": 1
-        })
-
-    # 完整 Flex Bubble
+def get_plan_flex_bubble():
     return {
         "type": "bubble",
         "size": "mega",
@@ -305,7 +286,6 @@ def get_plan_flex_bubble(
                     "color": "#F5FAFE",
                     "align": "center"
                 },
-
                 # Pro 進階版
                 {
                     "type": "box",
@@ -332,50 +312,21 @@ def get_plan_flex_bubble(
                         },
                         {
                             "type": "text",
-                            "text": "🆓 新戶 10 天免費試用",
-                            "size": "sm",
-                            "color": "#F59E42",
-                            "weight": "bold",
-                            "margin": "sm"
-                        },
-                        {
-                            "type": "text",
                             "text": (
-                                "每日自動推播\n"
                                 "• BTC/ETH/ETF 六分類\n"
                                 "• 持幣結構圖表\n"
                                 "• 全球資產排行\n"
                                 "• 獨家精華摘要\n"
-                                "🎁 將陸續解鎖四項神秘數據（全數免費升級，不加價！）"
+                                "🎁 更多數據將免費解鎖"
                             ),
                             "wrap": True,
                             "color": "#F5FAFE",
                             "margin": "md"
-                        },
-                        # 神秘數據進度條（text + icon array）
-                        {
-                            "type": "box",
-                            "layout": "horizontal",
-                            "spacing": "xs",
-                            "margin": "md",
-                            "contents": [
-                                {
-                                    "type": "text",
-                                    "text": f"神秘數據解鎖進度：{safe_unlocked}/{capped_mystery}",
-                                    "size": "xs",
-                                    "color": "#F59E42",
-                                    "weight": "bold",
-                                    "flex": 6
-                                },
-                                *progress_circles
-                            ]
                         }
                     ]
                 },
-
                 # 分隔線
                 {"type": "separator", "margin": "xl"},
-
                 # Elite 專業版
                 {
                     "type": "box",
@@ -404,11 +355,10 @@ def get_plan_flex_bubble(
                             "type": "text",
                             "text": (
                                 "即將開放：\n"
-                                "• VIP 巨鯨資金動向追蹤（Hyperliquid/鏈上大戶異動報警）\n"
-                                "• ETF 產品歷史查詢＆深度數據（折溢價、AUM、市值排行）\n"
-                                "• 自訂條件推播／智能預警（價格、資金流、ETF、巨鯨異動）\n"
-                                "• 高階持幣結構動態／ETF間資金流可視化\n"
-                                "• 全球資產排行／多幣種資金流查詢"
+                                "• 巨鯨動向追蹤\n"
+                                "• ETF 深度數據\n"
+                                "• 自訂智能推播\n"
+                                "• 多幣種/多維查詢"
                             ),
                             "wrap": True,
                             "color": "#A5B4FC",
@@ -416,7 +366,6 @@ def get_plan_flex_bubble(
                         }
                     ]
                 },
-
                 # 按鈕區
                 {
                     "type": "box",
