@@ -366,7 +366,7 @@ def get_plan_flex_bubble():
                         }
                     ]
                 },
-                # 按鈕區
+                # 按鈕區塊（只保留一個主升級按鈕，次按鈕亮色＋白字）
                 {
                     "type": "box",
                     "layout": "horizontal",
@@ -381,7 +381,7 @@ def get_plan_flex_bubble():
                                 "uri": "https://lin.ee/fpZadc4"
                             },
                             "style": "primary",
-                            "color": "#F59E42",
+                            "color": "#F59E42",          # 亮橘
                             "height": "sm",
                             "margin": "none",
                             "gravity": "center",
@@ -395,12 +395,12 @@ def get_plan_flex_bubble():
                                 "uri": "https://leimaitech.com"
                             },
                             "style": "secondary",
-                            "color": "#40444A",        # 亮灰色，深灰但比背景亮
+                            "color": "#50545A",         # 亮灰色（主題色基礎上提亮2-3階）
                             "height": "sm",
                             "margin": "none",
                             "gravity": "center",
                             "cornerRadius": "10px",
-                            "textColor": "#F5FAFE"     # 如果 Flex 支援，這一行讓字強制白色
+                            "textColor": "#F5FAFE"      # Flex支援時會強制白字
                         }
                     ]
                 }
