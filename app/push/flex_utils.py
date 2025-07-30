@@ -392,8 +392,9 @@ def get_plan_flex_bubble():
                                 "uri": "https://leimaitech.com"
                             },
                             "style": "secondary",
-                            "color": "#1d1e24",
-                            "margin": "none"
+                            "color": "#353941",  # 比深色再亮一點
+                            "margin": "none",
+                            "height": "sm"
                         }
                     ]
                 }
