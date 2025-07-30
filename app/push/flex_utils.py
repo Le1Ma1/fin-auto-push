@@ -268,13 +268,14 @@ def get_full_flex_carousel():
     return carousel
 
 def get_plan_flex_bubble(
-    unlocked_count=0,  # 已解鎖神秘數據數（可動態決定，預設1/4）
-    total_mystery=4,   # 神秘數據總數
+    unlocked_count=0,  # 已解鎖神秘數據數（可動態決定，預設 0）
+    total_mystery=4,   # 神秘數據總數（最多 4 格）
 ):
-    # 極致防呆（1~4格）
+    # 極致防呆：icon 數量必須 1~4 格，亮格不能超過最大
     capped_mystery = min(max(int(total_mystery), 1), 4)
     safe_unlocked = min(max(int(unlocked_count), 0), capped_mystery)
 
+    # 動態進度條 icon 陣列
     progress_circles = []
     for i in range(capped_mystery):
         progress_circles.append({
@@ -285,6 +286,7 @@ def get_plan_flex_bubble(
             "flex": 1
         })
 
+    # 完整 Flex Bubble
     return {
         "type": "bubble",
         "size": "mega",
@@ -294,6 +296,7 @@ def get_plan_flex_bubble(
             "backgroundColor": "#191E24",
             "paddingAll": "24px",
             "contents": [
+                # 標題
                 {
                     "type": "text",
                     "text": "訂閱方案介紹",
@@ -302,6 +305,8 @@ def get_plan_flex_bubble(
                     "color": "#F5FAFE",
                     "align": "center"
                 },
+
+                # Pro 進階版
                 {
                     "type": "box",
                     "layout": "vertical",
@@ -347,6 +352,7 @@ def get_plan_flex_bubble(
                             "color": "#F5FAFE",
                             "margin": "md"
                         },
+                        # 神秘數據進度條（text + icon array）
                         {
                             "type": "box",
                             "layout": "horizontal",
@@ -366,7 +372,11 @@ def get_plan_flex_bubble(
                         }
                     ]
                 },
+
+                # 分隔線
                 {"type": "separator", "margin": "xl"},
+
+                # Elite 專業版
                 {
                     "type": "box",
                     "layout": "vertical",
@@ -406,6 +416,8 @@ def get_plan_flex_bubble(
                         }
                     ]
                 },
+
+                # 按鈕區
                 {
                     "type": "box",
                     "layout": "horizontal",
