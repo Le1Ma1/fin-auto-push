@@ -119,7 +119,6 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=14):
     max_in_date_hist = df_history.loc[total_flows_hist.idxmax(), 'date'].strftime('%Y-%m-%d') if not total_flows_hist.empty else ""
     max_out_date_hist = df_history.loc[total_flows_hist.idxmin(), 'date'].strftime('%Y-%m-%d') if not total_flows_hist.empty else ""
 
-    # === 完全復刻舊版排版 ===
     bubble_hist = {
         "type": "bubble",
         "hero": {
@@ -135,8 +134,6 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=14):
             "contents": [
                 {"type": "text", "text": f"{symbol} ETF 全歷史資金流", "weight": "bold", "size": "xl", "color": "#F5FAFE"},
                 {"type": "text", "text": f"{df_history['date'].min().strftime('%Y-%m-%d')} ~ {df_history['date'].max().strftime('%Y-%m-%d')}", "size": "md", "color": "#F5FAFE"},
-
-                # 最大單日淨流入：金額＋日期（綠字）
                 {
                     "type": "text",
                     "text": f"最大單日淨流入：",
@@ -152,7 +149,6 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=14):
                     "weight": "bold",
                     "margin": "sm"
                 },
-                # 最大單日淨流出：金額＋日期（紅字）
                 {
                     "type": "text",
                     "text": f"最大單日淨流出：",
@@ -168,7 +164,6 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=14):
                     "weight": "bold",
                     "margin": "sm"
                 },
-                # 中位數（綠字）
                 {
                     "type": "text",
                     "text": f"中位數：",
@@ -184,7 +179,6 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=14):
                     "weight": "bold",
                     "margin": "sm"
                 },
-                # 平均值（綠字）
                 {
                     "type": "text",
                     "text": f"平均值：",
@@ -250,7 +244,7 @@ def get_full_flex_carousel():
 
     df_asset['market_cap_display'] = df_asset['symbol'].apply(en_unit_to_zh_and_fmt)
     df_asset['symbol_cap_num'] = df_asset['symbol'].apply(parse_market_cap_symbol)
-    market_cap_header = "市值"   # ← 這一行加進去！
+    market_cap_header = "市值"
 
     df_asset['price_display'] = df_asset['market_cap_num'].apply(lambda x: f"{float(x):,.1f}" if pd.notnull(x) else "-")
 
@@ -266,7 +260,6 @@ def get_full_flex_carousel():
     )
     flex_asset = get_asset_competition_flex(today, df_sorted, img_asset, market_cap_header)
 
-    # === 新增持幣分布卡片 ===
     flex_btc_holder = get_flex_bubble_btc_holder(days=14)
     carousel = {
         "type": "carousel",
@@ -278,13 +271,15 @@ def get_plan_flex_bubble(
     unlocked_count=0,  # 已解鎖神秘數據數（可動態決定，預設1/4）
     total_mystery=4,   # 神秘數據總數
 ):
-    # 動態產生進度條（4格圓點）
-    capped_mystery = min(total_mystery, 4)
+    # 極致防呆（1~4格）
+    capped_mystery = min(max(int(total_mystery), 1), 4)
+    safe_unlocked = min(max(int(unlocked_count), 0), capped_mystery)
+
     progress_circles = []
     for i in range(capped_mystery):
         progress_circles.append({
             "type": "icon",
-            "url": "https://cdn-icons-png.flaticon.com/512/32/32355.png" if i < unlocked_count else "https://cdn-icons-png.flaticon.com/512/1828/1828884.png",
+            "url": "https://cdn-icons-png.flaticon.com/512/32/32355.png" if i < safe_unlocked else "https://cdn-icons-png.flaticon.com/512/1828/1828884.png",
             "size": "sm",
             "margin": "xs",
             "flex": 1
@@ -299,7 +294,6 @@ def get_plan_flex_bubble(
             "backgroundColor": "#191E24",
             "paddingAll": "24px",
             "contents": [
-                # 標題
                 {
                     "type": "text",
                     "text": "訂閱方案介紹",
@@ -308,8 +302,6 @@ def get_plan_flex_bubble(
                     "color": "#F5FAFE",
                     "align": "center"
                 },
-
-                # Pro 進階版
                 {
                     "type": "box",
                     "layout": "vertical",
@@ -333,7 +325,6 @@ def get_plan_flex_bubble(
                             "color": "#A3E635",
                             "margin": "sm"
                         },
-                        # 免費試用提示
                         {
                             "type": "text",
                             "text": "🆓 新戶 10 天免費試用",
@@ -356,7 +347,6 @@ def get_plan_flex_bubble(
                             "color": "#F5FAFE",
                             "margin": "md"
                         },
-                        # 神秘數據進度條
                         {
                             "type": "box",
                             "layout": "horizontal",
@@ -365,22 +355,18 @@ def get_plan_flex_bubble(
                             "contents": [
                                 {
                                     "type": "text",
-                                    "text": f"神秘數據解鎖進度：{unlocked_count}/{total_mystery}",
+                                    "text": f"神秘數據解鎖進度：{safe_unlocked}/{capped_mystery}",
                                     "size": "xs",
                                     "color": "#F59E42",
                                     "weight": "bold",
                                     "flex": 6
                                 },
-                                *progress_circles  # 直接攤平，不要再包一個 box
+                                *progress_circles
                             ]
                         }
                     ]
                 },
-
-                # 分隔線
                 {"type": "separator", "margin": "xl"},
-
-                # Elite 專業版
                 {
                     "type": "box",
                     "layout": "vertical",
@@ -420,8 +406,6 @@ def get_plan_flex_bubble(
                         }
                     ]
                 },
-
-                # 按鈕區
                 {
                     "type": "box",
                     "layout": "horizontal",
