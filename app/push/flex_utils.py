@@ -378,7 +378,7 @@ def get_plan_flex_bubble():
                             "action": {
                                 "type": "uri",
                                 "label": "我要升級",
-                                "uri": "https://lin.ee/fpZadc4"
+                                "uri": "https://liff.line.me/2007745575-JPOMYKYn"
                             },
                             "style": "primary",
                             "color": "#F59E42",          # 亮橘
