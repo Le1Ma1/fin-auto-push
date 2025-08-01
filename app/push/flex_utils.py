@@ -2,7 +2,7 @@ import datetime
 import pandas as pd
 from app.db import query_etf_flows_all
 from app.plot_chart import plot_etf_bar_chart, plot_etf_history_line_chart, plot_asset_top10_bar_chart
-from app.push.push_etf_chart import upload_imgbb
+from app.push.push_etf_chart import upload_to_r2
 from app.utils import (
     etf_flex_table_single_day,
     human_unit,
@@ -84,7 +84,7 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=14):
     total_today = df_day['flow_usd'].sum()
     etf_today_table = etf_flex_table_single_day(df_day)
     df_14d = get_recent_n_days_settled(df_all, target_date, n=days)
-    img_14d = upload_imgbb(plot_etf_bar_chart(df_14d, symbol, days=days))
+    img_14d = upload_to_r2(plot_etf_bar_chart(df_14d, symbol, days=days))
 
     bubble_14d = {
         "type": "bubble",
@@ -110,7 +110,7 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=14):
 
     # 歷史
     df_history = get_all_settled_until(df_all, target_date)
-    img_hist = upload_imgbb(plot_etf_history_line_chart(df_history, symbol))
+    img_hist = upload_to_r2(plot_etf_history_line_chart(df_history, symbol))
     total_flows_hist = df_history['total_flow_usd'].astype(float)
     nonzero_median_hist = safe_number(total_flows_hist[total_flows_hist != 0].median())
     mean_hist = safe_number(total_flows_hist.mean())
@@ -250,7 +250,7 @@ def get_full_flex_carousel():
 
     df_sorted = df_asset.sort_values('symbol_cap_num', ascending=False).reset_index(drop=True)
 
-    img_asset = upload_imgbb(
+    img_asset = upload_to_r2(
         plot_asset_top10_bar_chart(
             df_sorted,
             today,
