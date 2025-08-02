@@ -1,7 +1,7 @@
 from app.db import query_btc_holder_distribution
 from app.plot_chart_btc_holder import plot_btc_holder_pie
 from app.push.push_etf_chart import upload_to_r2
-from app.utils import generate_btc_holder_highlight
+from app.utils import BTC_HOLDER_COLOR_MAP
 
 def get_flex_bubble_btc_holder(days=1):
     df_hist = query_btc_holder_distribution(days=days)
@@ -14,23 +14,25 @@ def get_flex_bubble_btc_holder(days=1):
     else:
         df_yesterday = None
 
-    # --- 1. 產生亮點摘要與分類變動 ---
-    # Main highlight lines（用 emoji 美化）
+    # 亮點摘要
     def fmt(val): return f"{float(val):.1f}%"
-    def safe(df, cat):  # 防呆
+    def safe(df, cat):
         try:
             return float(df[df['category'] == cat].iloc[0]['percent'])
         except:
             return 0.0
+
     highlight_lines = [
         f"💡 長期持有者：{fmt(safe(df_today, '長期持有者'))}（籌碼極度集中）",
         f"🏦 交易所儲備：{fmt(safe(df_today, '交易所儲備'))}（拋壓有限）",
         f"🏢 ETF/機構：{fmt(safe(df_today, 'ETF/機構'))}（機構參與提升）",
     ]
-    # 比較變動（漲跌顏色與 icon）
-    change_lines = []
+
+    # 六分類順序
     cats = ["長期持有者", "交易所儲備", "ETF/機構", "未開採", "中央銀行／主權基金", "其他"]
-    emoji_map = {"長期持有者":"🟦", "交易所儲備":"🟩", "ETF/機構":"🟧", "未開採":"🟥", "中央銀行／主權基金":"🟪", "其他":"⬛️"}
+
+    # 比較變動，左 icon 用與圓餅圖一致顏色
+    change_lines = []
     if df_yesterday is not None:
         for cat in cats:
             pct_today = safe(df_today, cat)
@@ -44,12 +46,20 @@ def get_flex_bubble_btc_holder(days=1):
                     "type": "box",
                     "layout": "horizontal",
                     "contents": [
-                        {"type": "text", "text": f"{emoji_map.get(cat,'')} {cat}", "size": "sm", "flex": 6, "color": "#F5FAFE"},
+                        {
+                            "type": "text",
+                            "text": "■",
+                            "size": "md",
+                            "flex": 2,
+                            "color": BTC_HOLDER_COLOR_MAP.get(cat, "#666666")
+                        },
+                        {"type": "text", "text": f"{cat}", "size": "sm", "flex": 5, "color": "#F5FAFE"},
                         {"type": "text", "text": f"{arrow}{sign}{diff:.2f}%", "size": "sm", "align": "end", "flex": 4, "color": color}
                     ],
                     "margin": "sm"
                 })
-    # --- 2. 組 Flex message ---
+
+    # Flex message
     img_pie = upload_to_r2(plot_btc_holder_pie(df_today, today))
     bubble = {
         "type": "bubble",
@@ -68,7 +78,6 @@ def get_flex_bubble_btc_holder(days=1):
             "contents": [
                 {"type": "text", "text": "BTC 六大類持幣分布", "weight": "bold", "size": "xl", "color": "#F5FAFE"},
                 {"type": "text", "text": f"日期：{today}", "size": "sm", "color": "#A3E635", "margin": "sm"},
-                # 亮點區
                 {
                     "type": "box",
                     "layout": "vertical",
@@ -84,7 +93,6 @@ def get_flex_bubble_btc_holder(days=1):
                         ]
                     ]
                 },
-                # 變動區
                 {
                     "type": "box",
                     "layout": "vertical",
@@ -102,4 +110,3 @@ def get_flex_bubble_btc_holder(days=1):
             ]
         }
     }
-    return bubble

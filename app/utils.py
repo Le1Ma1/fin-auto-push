@@ -154,3 +154,12 @@ def generate_btc_holder_highlight(df_today, df_yesterday=None):
                 highlight_lines.append(
                     f"{name}今日占比{arrow}{sign}{diff:.1f}%")
     return "\n".join(highlight_lines)
+
+BTC_HOLDER_COLOR_MAP = {
+    "長期持有者": "#3498db",
+    "交易所儲備": "#2ecc71",
+    "ETF/機構": "#f39c12",
+    "未開採": "#e74c3c",
+    "中央銀行／主權基金": "#9b59b6",
+    "其他": "#95a5a6"
+}
