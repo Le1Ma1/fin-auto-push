@@ -4,6 +4,9 @@ from app.fetcher.daily_asset_snapshot import daily_asset_snapshot
 from app.fetcher.fetch_etf_daily import fetch_and_save as fetch_etf_daily
 from app.push.push_utils import push_flex_to_targets
 from app.push.flex_utils import get_full_flex_carousel 
+from app.btc_holder_distribution import fetch_btc_holder_distribution
+from app.btc_holder_distribution_df import btc_holder_df_to_db
+from app.db import upsert_btc_holder_distribution
 
 def fetch_all_data():
     fetch_etf_daily("BTC", days=5)
