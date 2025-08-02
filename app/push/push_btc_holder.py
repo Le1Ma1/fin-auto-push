@@ -14,7 +14,8 @@ def get_flex_bubble_btc_holder(days=1):
             "type": "image",
             "url": img_pie,
             "size": "full",
-            "aspectRatio": "1:1"
+            "aspectRatio": "1:1",
+            "aspectMode": "fit"
         },
         "body": {
             "type": "box",
@@ -27,3 +28,4 @@ def get_flex_bubble_btc_holder(days=1):
         }
     }
     return bubble
+

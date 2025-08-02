@@ -61,7 +61,8 @@ def get_asset_competition_flex(today, df, img_url, market_cap_header):
             "type": "image",
             "url": img_url,
             "size": "full",
-            "aspectRatio": "2:1"
+            "aspectRatio": "2:1",
+            "aspectMode": "fit"
         },
         "body": {
             "type": "box",
