@@ -24,46 +24,75 @@ def get_font_properties():
 myfont = get_font_properties()
 plt.rcParams['axes.unicode_minus'] = False
 
-def plot_etf_bar_chart(df, symbol, days=14):
-    matplotlib.rcParams['axes.unicode_minus'] = False
+def plot_etf_bar_chart(df: pd.DataFrame, symbol: str, days: int = 14) -> str:
+    """
+    畫 ETF 近 N 日資金流長條圖 (2:1)，並輸出 PNG 檔。
+    """
+    # 1. 複製資料並取最近 days 筆
     df = df.copy()
     df['date'] = pd.to_datetime(df['date'])
-    daily = df.groupby('date').agg({'total_flow_usd': 'first'}).reset_index()
-    daily = daily[daily['total_flow_usd'].notnull()]
+    daily = (
+        df.groupby('date')
+          .agg({'total_flow_usd': 'first'})
+          .reset_index()
+          .dropna(subset=['total_flow_usd'])
+    )
     daily = daily.tail(days)
+
+    # 2. 計算最大值單位 (e.g. 億/兆)
     max_val = daily['total_flow_usd'].abs().max()
     unit, unit_div = get_ch_unit_and_div(max_val)
     daily['value_unit'] = daily['total_flow_usd'] / unit_div
-    fig, ax = plt.subplots(figsize=(14, 7), facecolor='#191E24')
+
+    # 3. 建立 2:1 的畫布 (寬×高 = 12×6 吋)
+    fig, ax = plt.subplots(figsize=(12, 6), facecolor='#191E24')
     ax.set_facecolor('#191E24')
+
+    # 4. 完全移除所有 Matplotlib 預設邊距
+    plt.tight_layout(pad=0)
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+    # 5. 畫長條圖
     colors = ['#FA5252' if val < 0 else '#1D9BF6' for val in daily['total_flow_usd']]
-    bars = ax.bar(
-        daily['date'].dt.strftime('%Y-%m-%d'),
-        daily['value_unit'],
-        color=colors
-    )
+    bars   = ax.bar(daily['date'].dt.strftime('%Y-%m-%d'),
+                    daily['value_unit'],
+                    color=colors)
+
+    # 6. 在條尾加標籤
     for bar, val in zip(bars, daily['total_flow_usd']):
-        color = "#FA5252" if val < 0 else "#1D9BF6"
+        label = f"{human_unit(val)}"
         ax.text(
-            bar.get_x() + bar.get_width()/2,
-            bar.get_height() + 0.05 if val >= 0 else bar.get_height() - 0.08,
-            human_unit(val),
-            ha='center', va='bottom' if val >= 0 else 'top', fontsize=16, color=color, fontweight='bold'
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + (0.05 if val >= 0 else -0.08),
+            label,
+            ha='center',
+            va='bottom' if val >= 0 else 'top',
+            fontsize=14,
+            color=("#1D9BF6" if val >= 0 else "#FA5252"),
+            fontweight='bold'
         )
-    ax.set_title(f"{symbol} ETF 近 {days} 日資金流（{unit}）", fontsize=22, weight='bold', color='white')
-    ax.set_xlabel("日期", fontsize=17, color='white')
-    ax.set_ylabel(f"資金流入/流出（{unit}）", fontsize=17, color='white')
-    ax.grid(axis='y', color='#bbb', linestyle='--', linewidth=1.0, alpha=0.5)
-    plt.xticks(rotation=30, ha='right', fontsize=15, color='white')
-    plt.yticks(fontsize=15, color='white')
-    ax.tick_params(axis='x', colors='white')
-    ax.tick_params(axis='y', colors='white')
+
+    # 7. 標題與軸標籤
+    ax.set_title(f"{symbol} ETF 近 {days} 日資金流（{unit}）",
+                 fontsize=20, color='white')
+    ax.set_xlabel("日期", fontsize=16, color='white')
+    ax.set_ylabel(f"資金流入/流出（{unit}）", fontsize=16, color='white')
+    ax.grid(axis='y', color='#555', linestyle='--', alpha=0.5)
+    plt.xticks(rotation=30, ha='right', fontsize=13, color='white')
+    plt.yticks(fontsize=13, color='white')
     for spine in ax.spines.values():
         spine.set_color('white')
-    plt.tight_layout()
+
+    # 8. 輸出 PNG，去除所有外圍空白
     img_path = f"etf_{symbol}_bar_{daily['date'].min().date()}_{daily['date'].max().date()}.png"
-    plt.savefig(img_path, dpi=270, bbox_inches='tight', transparent=False)
-    plt.close()
+    plt.savefig(
+        img_path,
+        dpi=270,
+        bbox_inches='tight',  # 緊貼內容裁剪
+        pad_inches=0,         # 無額外邊距
+        transparent=False
+    )
+    plt.close(fig)
     return img_path
 
 def plot_etf_history_line_chart(df, symbol):

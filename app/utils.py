@@ -113,3 +113,44 @@ def get_clean_name(row):
     if name.upper() in ['BITCOIN', 'BTC', 'ETH', 'GOLD', 'SILVER']:
         name = row['symbol']
     return name
+
+def generate_btc_holder_highlight(df_today, df_yesterday=None):
+    """
+    自動根據持幣六分類產生本日亮點摘要（台灣中文），可 plug-in 進 Flex message。
+    df_today, df_yesterday: 需為相同 DataFrame 格式，含 category, btc_count, percent 欄位
+    """
+    mapping = {
+        "長期持有者": "長期持有者",
+        "交易所儲備": "交易所儲備",
+        "ETF/機構": "ETF/機構",
+        "未開採": "未開採",
+        "中央銀行／主權基金": "中央銀行/主權基金",
+        "其他": "其他"
+    }
+    # 取出三大主分類的百分比
+    lth = df_today[df_today['category'] == "長期持有者"].iloc[0]['percent']
+    exch = df_today[df_today['category'] == "交易所儲備"].iloc[0]['percent']
+    etf = df_today[df_today['category'] == "ETF/機構"].iloc[0]['percent']
+
+    def fmt(val): return f"{float(val):.1f}%"
+
+    highlight_lines = []
+    highlight_lines.append(
+        f"長期持有者占比高達 {fmt(lth)}，顯示籌碼極度集中於信仰者手中。")
+    highlight_lines.append(
+        f"交易所儲備僅佔 {fmt(exch)}，市場拋壓相對有限。")
+    highlight_lines.append(
+        f"ETF/機構持有 {fmt(etf)}，機構參與持續提升。")
+
+    # 進階：比較昨日，若有 df_yesterday，檢查大變動
+    if df_yesterday is not None:
+        for cat, name in mapping.items():
+            pct_today = float(df_today[df_today['category'] == cat].iloc[0]['percent'])
+            pct_yest = float(df_yesterday[df_yesterday['category'] == cat].iloc[0]['percent'])
+            diff = pct_today - pct_yest
+            if abs(diff) >= 0.3:
+                arrow = "▲" if diff > 0 else "▼"
+                sign = "+" if diff > 0 else ""
+                highlight_lines.append(
+                    f"{name}今日占比{arrow}{sign}{diff:.1f}%")
+    return "\n".join(highlight_lines)
