@@ -7,14 +7,12 @@ def get_flex_bubble_btc_holder(days=1):
     df_hist = query_btc_holder_distribution(days=days)
     today = df_hist['date'].max().strftime("%Y-%m-%d")
     df_today = df_hist[df_hist['date'] == df_hist['date'].max()]
-    # 嘗試取得昨日資料（假設有 2 天資料）
     if len(df_hist['date'].unique()) >= 2:
         yesterday = sorted(df_hist['date'].unique())[-2]
         df_yesterday = df_hist[df_hist['date'] == yesterday]
     else:
         df_yesterday = None
 
-    # 亮點摘要
     def fmt(val): return f"{float(val):.1f}%"
     def safe(df, cat):
         try:
@@ -28,42 +26,56 @@ def get_flex_bubble_btc_holder(days=1):
         f"🏢 ETF/機構：{fmt(safe(df_today, 'ETF/機構'))}（機構參與提升）",
     ]
 
-    # 比較變動，左 icon 用與圓餅圖一致顏色
-    # 六分類順序
     cats = ["長期持有者", "交易所儲備", "ETF/機構", "未開採", "中央銀行／主權基金", "其他"]
+
+    # 加入簡寫映射
+    display_map = {
+        "中央銀行／主權基金": "銀行/主權"
+    }
 
     change_lines = []
     if df_yesterday is not None:
         for cat in cats:
             pct_today = safe(df_today, cat)
             pct_yest = safe(df_yesterday, cat)
-            # 僅在兩天都能找到該分類才 push
-            if pct_today is not None and pct_yest is not None:
-                diff = pct_today - pct_yest
-                if abs(diff) >= 0.1:
-                    arrow = "🔼" if diff > 0 else "🔽"
-                    sign = "+" if diff > 0 else ""
-                    color = "#37D400" if diff > 0 else "#FA5252"
-                    change_lines.append({
-                        "type": "box",
-                        "layout": "horizontal",
-                        "contents": [
-                            {
-                                "type": "text",
-                                "text": "■",
-                                "size": "md",
-                                "flex": 2,
-                                "color": BTC_HOLDER_COLOR_MAP.get(cat, "#666666")
-                            },
-                            {"type": "text", "text": f"{cat}", "size": "sm", "flex": 5, "color": "#F5FAFE"},
-                            {"type": "text", "text": f"{arrow}{sign}{diff:.2f}%", "size": "sm", "align": "end", "flex": 4, "color": color}
-                        ],
-                        "margin": "sm"
-                    })
-    # 強制移除 None
-    change_lines = [c for c in change_lines if c is not None]
+            diff = pct_today - pct_yest
+            if abs(diff) >= 0.1:
+                arrow = "🔼" if diff > 0 else "🔽"
+                sign = "+" if diff > 0 else ""
+                color = "#37D400" if diff > 0 else "#FA5252"
+                display_name = display_map.get(cat, cat)
+                change_lines.append({
+                    "type": "box",
+                    "layout": "horizontal",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "■",
+                            "size": "md",
+                            "flex": 2,
+                            "color": BTC_HOLDER_COLOR_MAP.get(cat, "#666666")
+                        },
+                        {
+                            "type": "text",
+                            "text": display_name,
+                            "size": "sm",
+                            "flex": 5,
+                            "color": "#F5FAFE"
+                        },
+                        {
+                            "type": "text",
+                            "text": f"{arrow}{sign}{diff:.2f}%".rjust(7),
+                            "size": "sm",
+                            "align": "end",
+                            "flex": 4,
+                            "color": color,
+                            "weight": "bold",
+                            "wrap": False
+                        }
+                    ],
+                    "margin": "sm"
+                })
 
-    # Flex message
     img_pie = upload_to_r2(plot_btc_holder_pie(df_today, today))
     bubble = {
         "type": "bubble",
