@@ -22,6 +22,7 @@ SECRET_COMMAND = "!update_data"
 SECRET_PUSH_TEST = "!test_push"
 SECRET_FORCE_SYNC = "!force_sync"
 SECRET_HOLDER_UPSERT = "!test_holder_upsert"
+SECRET_SYNC_LTH_HISTORY = "!sync_lth_history"
 
 @app.post("/callback")
 async def callback(request: Request):
@@ -103,6 +104,18 @@ def handle_message(event):
                     import traceback
                     tb = traceback.format_exc()
                     reply_text = f"❌ [持幣分布] 上傳失敗：{e}\n```\n{tb}\n```"
+                line_bot_api.reply_message(event.reply_token, TextSendMessage(reply_text))
+                return
+            
+            if text == SECRET_SYNC_LTH_HISTORY:
+                try:
+                    from app.btc_holder_distribution import upsert_longterm_holder_history
+                    upsert_longterm_holder_history()
+                    reply_text = "✅ [長期持有者] Coinglass 歷史資料已全部寫入 Supabase！"
+                except Exception as e:
+                    import traceback
+                    tb = traceback.format_exc()
+                    reply_text = f"❌ [長期持有者] 歷史批次上傳失敗：{e}\n```\n{tb}\n```"
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(reply_text))
                 return
         else:

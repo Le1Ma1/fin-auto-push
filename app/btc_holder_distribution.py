@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+from app.db import upsert_btc_holder_distribution
 
 def fetch_etf_holdings_coinglass():
     url = "https://open-api-v4.coinglass.com/api/etf/bitcoin/list"
@@ -144,3 +145,69 @@ def fetch_btc_holder_distribution():
     df = pd.DataFrame(result)
     print(f"[DEBUG] 總和：{total} BTC")  # 可印出 debug
     return df[["date", "category", "btc_count", "percent", "source"]]
+
+def fetch_longterm_holder_history():
+    url = "https://open-api-v4.coinglass.com/api/index/bitcoin-long-term-holder-supply"
+    headers = {
+        "accept": "application/json",
+        "CG-API-KEY": os.getenv("COINGLASS_API_KEY")
+    }
+    resp = requests.get(url, headers=headers, timeout=20)
+    result = resp.json()
+    data = result.get("data", [])
+    records = []
+    for row in data:
+        # date 欄位，若無則用 timestamp 換算
+        date_str = row.get("date")
+        if not date_str:
+            ts = row.get("timestamp") or row.get("time")
+            date_str = datetime.datetime.fromtimestamp(ts // 1000).strftime("%Y-%m-%d")
+        lth_btc = float(row.get("long_term_holder_supply", 0))
+        records.append({
+            "date": date_str,
+            "category": "長期持有者",
+            "btc_count": lth_btc,
+            "percent": None,  # 可後續補
+            "source": "Coinglass"
+        })
+    df = pd.DataFrame(records)
+    return df
+
+def btc_holder_df_to_db(df: pd.DataFrame):
+    """
+    資料清理、欄位格式化，自動補齊 percent 欄位（同一天多分類自動合計）。
+    date 欄位轉 yyyy-mm-dd，數值欄位自動補零。
+    """
+    # 數值型態修正
+    df["btc_count"] = pd.to_numeric(df["btc_count"], errors="coerce").fillna(0)
+    # 日期格式統一
+    df["date"] = pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d")
+    
+    # 自動補 percent 欄位
+    if "percent" not in df.columns or df["percent"].isnull().all():
+        for d in df["date"].unique():
+            mask = df["date"] == d
+            total = df.loc[mask, "btc_count"].sum()
+            # 單一分類也直接給 100%
+            if total > 0:
+                df.loc[mask, "percent"] = df.loc[mask, "btc_count"] / total * 100
+            else:
+                df.loc[mask, "percent"] = 0
+        df["percent"] = df["percent"].round(2)
+    else:
+        # 有 percent 欄位但有缺值，補零
+        df["percent"] = pd.to_numeric(df["percent"], errors="coerce").fillna(0).round(2)
+
+    # 欄位順序統一
+    keep_cols = ["date", "category", "btc_count", "percent", "source"]
+    for col in keep_cols:
+        if col not in df.columns:
+            df[col] = None
+    return df[keep_cols]
+
+def upsert_longterm_holder_history():
+    df = fetch_longterm_holder_history()
+    from app.btc_holder_distribution_df import btc_holder_df_to_db
+    df_db = btc_holder_df_to_db(df)
+    upsert_btc_holder_distribution(df_db)
+    print(f"✅ 長期持有者全歷史資料 {len(df_db)} 筆已寫入 Supabase")
