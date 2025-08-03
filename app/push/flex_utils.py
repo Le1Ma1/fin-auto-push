@@ -79,7 +79,7 @@ def safe_number(val):
         return 0
     return val
 
-def get_flex_bubble_etf(symbol, df_all, target_date, days=14):
+def get_flex_bubble_etf(symbol, df_all, target_date, days=30):
     # 單日
     df_day = df_all[df_all['date'] == pd.Timestamp(target_date)].copy()
     total_today = df_day['flow_usd'].sum()
