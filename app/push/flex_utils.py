@@ -93,7 +93,7 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=30):
             "type": "image",
             "url": img_14d,
             "size": "full",
-            "aspectRatio": "15:6"
+            "aspectRatio": "12:6"
         },
         "body": {
             "type": "box",

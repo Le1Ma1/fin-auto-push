@@ -20,8 +20,7 @@ def get_flex_bubble_btc_holder(days=1):
         except:
             return 0.0
     def format_percent(arrow, sign, diff):
-        s = f"{arrow}{sign}{abs(diff):.2f}%"
-        return s.rjust(8)
+        return f"{arrow}{sign}{abs(diff):.2f}%"
 
     highlight_lines = [
         f"💡 長期持有者：{fmt(safe(df_today, '長期持有者'))}（籌碼極度集中）",
@@ -90,7 +89,7 @@ def get_flex_bubble_btc_holder(days=1):
             "type": "image",
             "url": img_pie,
             "size": "full",
-            "aspectRatio": "5:6",
+            "aspectRatio": "7:5",
             "aspectMode": "fit"
         },
         "body": {
