@@ -2,7 +2,7 @@ import requests
 import datetime
 import os
 
-def fetch_etf_flow(symbol="BTC", days=10):
+def fetch_etf_flow(symbol="BTC", days=30):
     '''
     symbol: 幣種名稱, 如 "BTC", "ETH"
     days: 幾天 (取最近 N 天)
