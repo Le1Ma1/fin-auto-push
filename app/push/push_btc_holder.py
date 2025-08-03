@@ -89,7 +89,7 @@ def get_flex_bubble_btc_holder(days=1):
             "type": "image",
             "url": img_pie,
             "size": "full",
-            "aspectRatio": "7:5",
+            "aspectRatio": "8.33:7",
             "aspectMode": "fit"
         },
         "body": {
