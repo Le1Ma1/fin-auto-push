@@ -24,7 +24,7 @@ def get_font_properties():
 myfont = get_font_properties()
 plt.rcParams['axes.unicode_minus'] = False
 
-def plot_etf_bar_chart(df: pd.DataFrame, symbol: str, days: int = 14) -> str:
+def plot_etf_bar_chart(df: pd.DataFrame, symbol: str, days: int = 30) -> str:
     """
     畫 ETF 近 N 日資金流長條圖 (2:1)，並輸出 PNG 檔。
     """
