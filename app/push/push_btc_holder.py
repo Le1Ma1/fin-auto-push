@@ -102,21 +102,6 @@ def get_flex_bubble_btc_holder(days=1):
                 {
                     "type": "box",
                     "layout": "vertical",
-                    "backgroundColor": "#23272F",
-                    "cornerRadius": "10px",
-                    "paddingAll": "8px",       # 改小 padding
-                    "margin": "none",         # 改無 margin
-                    "contents": [
-                        {"type": "text", "text": "【本日亮點】", "size": "md", "weight": "bold", "color": "#FFD600"},
-                        *[
-                            {"type": "text", "text": line, "size": "sm", "wrap": True, "color": "#F5FAFE", "margin": "sm"}
-                            for line in highlight_lines
-                        ]
-                    ]
-                },
-                {
-                    "type": "box",
-                    "layout": "vertical",
                     "backgroundColor": "#101218",
                     "cornerRadius": "10px",
                     "paddingAll": "8px",      # 改小 padding
