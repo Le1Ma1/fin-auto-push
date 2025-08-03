@@ -74,7 +74,6 @@ def get_flex_bubble_btc_holder(days=1):
                             "style": "normal",
                             "gravity": "center",
                             "contents": [],
-                            **"font": "monospace"**  # <== 加入這行（需搭配 LINE Flex 支援）
                         }
                     ],
                     "margin": "sm"
