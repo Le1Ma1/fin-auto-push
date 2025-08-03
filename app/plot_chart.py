@@ -105,7 +105,7 @@ def plot_etf_history_line_chart(df, symbol):
     max_val = daily['total_flow_usd'].abs().max()
     unit, unit_div = get_ch_unit_and_div(max_val)
     daily['value_unit'] = daily['total_flow_usd'] / unit_div
-    fig, ax = plt.subplots(figsize=(14, 6), facecolor='#191E24')
+    fig, ax = plt.subplots(figsize=(12, 6), facecolor='#191E24')
     ax.set_facecolor('#191E24')
     ax.plot(daily['date'], daily['value_unit'], marker='o', linestyle='-', linewidth=3, color='#1D9BF6')
     ax.axhline(0, color='gray', linewidth=1)

@@ -61,7 +61,7 @@ def get_asset_competition_flex(today, df, img_url, market_cap_header):
             "type": "image",
             "url": img_url,
             "size": "full",
-            "aspectRatio": "2:1",
+            "aspectRatio": "12:6",
             "aspectMode": "fit"
         },
         "body": {
@@ -93,7 +93,7 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=30):
             "type": "image",
             "url": img_14d,
             "size": "full",
-            "aspectRatio": "2:1"
+            "aspectRatio": "12:6"
         },
         "body": {
             "type": "box",
@@ -126,7 +126,7 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=30):
             "type": "image",
             "url": img_hist,
             "size": "full",
-            "aspectRatio": "2:1"
+            "aspectRatio": "12:6"
         },
         "body": {
             "type": "box",
