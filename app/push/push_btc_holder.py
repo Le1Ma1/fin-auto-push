@@ -19,6 +19,9 @@ def get_flex_bubble_btc_holder(days=1):
             return float(df[df['category'] == cat].iloc[0]['percent'])
         except:
             return 0.0
+    def format_percent(arrow, sign, diff):
+        s = f"{arrow}{sign}{abs(diff):.2f}%"
+        return s.rjust(8)
 
     highlight_lines = [
         f"💡 長期持有者：{fmt(safe(df_today, '長期持有者'))}（籌碼極度集中）",
@@ -64,10 +67,10 @@ def get_flex_bubble_btc_holder(days=1):
                         },
                         {
                             "type": "text",
-                            "text": f"{arrow}{sign}{diff:.2f}%",
+                            "text": format_percent(arrow, sign, diff),
                             "size": "sm",
                             "align": "end",
-                            "flex": 4,
+                            "flex": 6,
                             "color": color,
                             "weight": "bold",
                             "wrap": False,
