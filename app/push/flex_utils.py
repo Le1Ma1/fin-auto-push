@@ -200,6 +200,210 @@ def get_flex_bubble_etf(symbol, df_all, target_date, days=30):
     }
     return bubble_14d, bubble_hist
 
+def get_flex_bubble_fear_greed():
+    from app.db import supabase  # 你的 supabase 物件
+    import pandas as pd
+    # 查詢 14 日資料
+    rows = supabase.table("fear_greed_index").select("*").order("date", desc=True).limit(14).execute().data
+    if not rows:
+        # fallback or placeholder
+        fg_score, fg_level, fg_yesterday, fg_high, fg_low, fg_tips = 0, "-", 0, 0, 0, "暫無資料"
+        fg_img_url = "https://your-cdn.com/feargreed-placeholder.png"
+    else:
+        df = pd.DataFrame(rows).sort_values("date")
+        fg_score = int(df.iloc[-1]["score"])
+        fg_level = df.iloc[-1]["level"]
+        fg_yesterday = int(df.iloc[-2]["score"]) if len(df) >= 2 else "-"
+        fg_high = int(df["score"].max())
+        fg_low = int(df["score"].min())
+        # Tips 可根據極端自動產生
+        fg_tips = "極端恐懼，留意抄底機會！" if fg_score < 25 else ("極端貪婪，謹防高位震盪！" if fg_score > 75 else "情緒中性，謹慎操作")
+        # 畫圖上傳
+        from app.plot_chart_fear_greed import plot_fear_greed_line_chart, upload_to_r2
+        fg_img_path = plot_fear_greed_line_chart(df)
+        fg_img_url = upload_to_r2(fg_img_path)
+    return {
+        "type": "bubble",
+        "size": "mega",
+        "hero": {
+            "type": "image",
+            "url": fg_img_url,
+            "size": "full",
+            "aspectRatio": "12.1:7",
+            "aspectMode": "fit"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#191E24",
+            "contents": [
+                {"type": "text", "text": f"恐懼與貪婪指數 {fg_score}", "size": "xl", "weight": "bold", "color": "#F5FAFE"},
+                {"type": "text", "text": f"今日情緒：{fg_level}", "size": "md", "color": "#A3E635", "weight": "bold"},
+                {"type": "text", "text": f"昨日：{fg_yesterday} | 14日高：{fg_high} 低：{fg_low}", "size": "sm", "color": "#C7D3E6"},
+                {"type": "text", "text": fg_tips, "size": "sm", "color": "#FBBF24"}
+            ]
+        }
+    }
+
+def get_flex_bubble_exchange_balance():
+    from app.db import supabase
+    import pandas as pd
+    # 取 14 日資料
+    rows = supabase.table("exchange_btc_balance").select("*").order("date", desc=True).limit(14*5).execute().data  # 取多一點，方便 groupby
+    if not rows:
+        exb_img_url = "https://your-cdn.com/exb-placeholder.png"
+        exb_max_in = {"exchange": "-", "amt": "-"}
+        exb_max_out = {"exchange": "-", "amt": "-"}
+        exb_top3_in_sum = "-"
+    else:
+        df = pd.DataFrame(rows)
+        # 將資料整理成每天每所的餘額
+        df = df.sort_values(["date", "exchange"])
+        # 計算今日/昨日流入流出
+        latest_date = df["date"].max()
+        prev_date = df["date"].unique()[-2] if len(df["date"].unique()) >= 2 else None
+        # 合併今日與昨日，計算餘額變化
+        today_df = df[df["date"] == latest_date].set_index("exchange")
+        prev_df = df[df["date"] == prev_date].set_index("exchange") if prev_date else None
+        if prev_df is not None:
+            merged = today_df.join(prev_df, lsuffix="_today", rsuffix="_prev", how="left").fillna(0)
+            merged["change"] = merged["btc_balance_today"] - merged["btc_balance_prev"]
+            # 最大流入
+            max_in = merged["change"].idxmax()
+            exb_max_in = {"exchange": max_in, "amt": f"{merged.loc[max_in]['change']:.0f}"}
+            # 最大流出
+            max_out = merged["change"].idxmin()
+            exb_max_out = {"exchange": max_out, "amt": f"{merged.loc[max_out]['change']:.0f}"}
+            # Top3合計流入
+            exb_top3_in_sum = f"{merged['change'].sort_values(ascending=False)[:3].sum():.0f}"
+        else:
+            exb_max_in = {"exchange": "-", "amt": "-"}
+            exb_max_out = {"exchange": "-", "amt": "-"}
+            exb_top3_in_sum = "-"
+        # 畫圖
+        from app.plot_chart_exchange_balance import plot_exchange_balance_chart, upload_to_r2
+        exb_img_path = plot_exchange_balance_chart(df)
+        exb_img_url = upload_to_r2(exb_img_path)
+    return {
+        "type": "bubble",
+        "size": "mega",
+        "hero": {
+            "type": "image",
+            "url": exb_img_url,
+            "size": "full",
+            "aspectRatio": "12.1:7",
+            "aspectMode": "fit"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#191E24",
+            "contents": [
+                {"type": "text", "text": "BTC 交易所持幣流向", "size": "xl", "weight": "bold", "color": "#F5FAFE"},
+                {"type": "text", "text": f"最大流入：{exb_max_in['exchange']} {exb_max_in['amt']} BTC", "size": "sm", "color": "#A3E635"},
+                {"type": "text", "text": f"最大流出：{exb_max_out['exchange']} {exb_max_out['amt']} BTC", "size": "sm", "color": "#FA5252"},
+                {"type": "text", "text": f"Top3合計流入：{exb_top3_in_sum} BTC", "size": "sm", "color": "#C7D3E6"}
+            ]
+        }
+    }
+
+def get_flex_bubble_funding_rate():
+    from app.db import supabase
+    import pandas as pd
+    # 取 14 日資料
+    rows = supabase.table("funding_rate").select("*").order("date", desc=True).limit(14*5).execute().data
+    if not rows:
+        fr_img_url = "https://your-cdn.com/funding-placeholder.png"
+        fr_max, fr_min, fr_avg, fr_alert, fr_tips = 0, 0, 0, False, "暫無資料"
+    else:
+        df = pd.DataFrame(rows)
+        # 對不同交易所平均
+        group = df.groupby("date")["rate"].mean().tail(14)
+        fr_max = group.max()
+        fr_min = group.min()
+        fr_avg = group.mean()
+        fr_alert = (abs(fr_max) > 0.01) or (abs(fr_min) < -0.01)  # 自行定義極端標準
+        fr_tips = "合約槓桿極端，注意爆倉風險" if fr_alert else "市場槓桿中性"
+        # 畫圖
+        from app.plot_chart_funding_rate import plot_funding_rate_chart, upload_to_r2
+        fr_img_path = plot_funding_rate_chart(group)
+        fr_img_url = upload_to_r2(fr_img_path)
+    return {
+        "type": "bubble",
+        "size": "mega",
+        "hero": {
+            "type": "image",
+            "url": fr_img_url,
+            "size": "full",
+            "aspectRatio": "12.1:7",
+            "aspectMode": "fit"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#191E24",
+            "contents": [
+                {"type": "text", "text": "BTC Funding Rate", "size": "xl", "weight": "bold", "color": "#F5FAFE"},
+                {"type": "text", "text": f"今日最大：{fr_max:.3%} 最小：{fr_min:.3%}", "size": "sm", "color": "#FBBF24" if fr_alert else "#A3E635"},
+                {"type": "text", "text": f"平均：{fr_avg:.3%}", "size": "sm", "color": "#C7D3E6"},
+                {"type": "text", "text": fr_tips, "size": "sm", "color": "#FA5252" if fr_alert else "#F5FAFE"}
+            ]
+        }
+    }
+
+def get_flex_bubble_whale_alert():
+    from app.db import supabase
+    import pandas as pd
+    # 取近一天資料
+    today = pd.Timestamp.today().strftime('%Y-%m-%d')
+    rows = supabase.table("whale_alert").select("*").eq("date", today).execute().data
+    if not rows:
+        wa_img_url = "https://your-cdn.com/whale-placeholder.png"
+        wa_max = {"from": "-", "to": "-", "amt": "-"}
+        wa_2nd = {"from": "-", "to": "-", "amt": "-"}
+        wa_total_count, wa_total_amt = 0, 0
+    else:
+        df = pd.DataFrame(rows)
+        df = df.sort_values("amount", ascending=False)
+        wa_max = {
+            "from": df.iloc[0]["from_address"],
+            "to": df.iloc[0]["to_address"],
+            "amt": f"{df.iloc[0]['amount']:.0f}"
+        }
+        wa_2nd = {
+            "from": df.iloc[1]["from_address"] if len(df) > 1 else "-",
+            "to": df.iloc[1]["to_address"] if len(df) > 1 else "-",
+            "amt": f"{df.iloc[1]['amount']:.0f}" if len(df) > 1 else "-"
+        }
+        wa_total_count = len(df)
+        wa_total_amt = f"{df['amount'].sum():.0f}"
+        # 畫圖
+        from app.plot_chart_whale_alert import plot_whale_alert_chart, upload_to_r2
+        wa_img_path = plot_whale_alert_chart(df)
+        wa_img_url = upload_to_r2(wa_img_path)
+    return {
+        "type": "bubble",
+        "size": "mega",
+        "hero": {
+            "type": "image",
+            "url": wa_img_url,
+            "size": "full",
+            "aspectRatio": "12.1:7",
+            "aspectMode": "fit"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "backgroundColor": "#191E24",
+            "contents": [
+                {"type": "text", "text": "BTC Whale Alert", "size": "xl", "weight": "bold", "color": "#F5FAFE"},
+                {"type": "text", "text": f"最大單筆：{wa_max['from']} → {wa_max['to']} {wa_max['amt']} BTC", "size": "sm", "color": "#A3E635"},
+                {"type": "text", "text": f"24h共 {wa_total_count} 筆 / {wa_total_amt} BTC", "size": "sm", "color": "#C7D3E6"},
+                {"type": "text", "text": f"次大：{wa_2nd['from']} → {wa_2nd['to']} {wa_2nd['amt']} BTC", "size": "sm", "color": "#7dd3fc"}
+            ]
+        }
+    }
+
 def get_full_flex_carousel():
     df_btc = query_etf_flows_all("BTC")
     target_btc_date = get_latest_safe_etf_date(df_btc)
@@ -264,7 +468,18 @@ def get_full_flex_carousel():
     flex_btc_holder = get_flex_bubble_btc_holder(days=14)
     carousel = {
         "type": "carousel",
-        "contents": [btc_bubble_14d, btc_bubble_hist, eth_bubble_14d, eth_bubble_hist, flex_asset, flex_btc_holder]
+        "contents": [
+            btc_bubble_14d, 
+            btc_bubble_hist, 
+            eth_bubble_14d, 
+            eth_bubble_hist, 
+            flex_asset, 
+            flex_btc_holder,
+            fear_greed_bubble,
+            exchange_balance_bubble,
+            funding_rate_bubble,
+            whale_alert_bubble
+        ]
     }
     return carousel
 
@@ -408,3 +623,47 @@ def get_plan_flex_bubble():
             ]
         }
     }
+
+def get_pro_plan_carousel():
+    bubbles = [
+        get_flex_bubble_btc_etf_14d(),
+        get_flex_bubble_btc_etf_history(),
+        get_flex_bubble_eth_etf_14d(),
+        get_flex_bubble_eth_etf_history(),
+        get_flex_bubble_top10_assets(),
+        get_flex_bubble_btc_holder_distribution(),
+        get_flex_bubble_fear_greed(),
+        get_flex_bubble_exchange_balance(),
+        get_flex_bubble_funding_rate(),
+        get_flex_bubble_whale_alert(),
+    ]
+    return {"type": "carousel", "contents": bubbles[:10]}
+
+def get_elite_carousels():
+    bubbles = [
+        get_flex_bubble_btc_etf_14d(),
+        get_flex_bubble_btc_etf_history(),
+        get_flex_bubble_eth_etf_14d(),
+        get_flex_bubble_eth_etf_history(),
+        get_flex_bubble_top10_assets(),
+        get_flex_bubble_btc_holder_distribution(),
+        get_flex_bubble_fear_greed(),
+        get_flex_bubble_exchange_balance(),
+        get_flex_bubble_funding_rate(),
+        get_flex_bubble_whale_alert(),
+        get_flex_bubble_ahr999(),
+        get_flex_bubble_puell_multiple(),
+        get_flex_bubble_stock_to_flow(),
+        get_flex_bubble_pi_cycle_indicator(),
+        get_flex_bubble_profitable_days(),
+        get_flex_bubble_borrow_interest_rate(),
+        get_flex_bubble_rainbow_chart(),
+        get_flex_bubble_stablecoin_marketcap(),
+        get_flex_bubble_global_long_short_ratio(),
+        get_flex_bubble_grayscale_holdings(),  # 你要的其它專業級
+    ]
+    # 拆兩組 carousel
+    return [
+        {"type": "carousel", "contents": bubbles[:10]},
+        {"type": "carousel", "contents": bubbles[10:20]}
+    ]
