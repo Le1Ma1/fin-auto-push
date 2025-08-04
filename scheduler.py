@@ -16,7 +16,11 @@ def fetch_all_data():
     df_btc_holder = fetch_btc_holder_distribution()
     df_btc_holder = btc_holder_df_to_db(df_btc_holder)
     upsert_btc_holder_distribution(df_btc_holder)
-
+    fetch_and_save_fear_greed()
+    fetch_and_save_exchange_balance()
+    fetch_and_save_funding_rate()
+    fetch_and_save_whale_alert()
+    
 def push_all_reports():
     # 這裡直接產生五合一 carousel 並推播多用戶
     flex_carousel = get_full_flex_carousel()
