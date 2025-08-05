@@ -88,11 +88,6 @@ def handle_message(event):
                 for carousel in carousels:
                     push_flex_to_targets(carousel)
                 reply = "✅ Elite 方案推播已測試送出"
-            # ---- 原有管理指令保留（如 ETF、LTH等） ----
-            elif text == SECRET_COMMAND:
-                # ...原本流程
-                reply = "..."
-            # ... 其它略
             else:
                 reply = None
 
