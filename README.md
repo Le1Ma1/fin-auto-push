@@ -4,46 +4,58 @@
 
 ```
 FIN-AUTO-PUSH/
-├── __pycache__/                      # Python 快取目錄
-├── .github/                          # GitHub Actions、Issue 模板等
-├── .env                              # 環境變數檔（API Key、LINE Token、Supabase 參數…）
-├── .env.test                         # 測試用環境變數
-├── .gitignore                        # Git 忽略規則
-├── NotoSansTC-Regular.ttf            # 中文字型，用於 matplotlib 圖表
-├── README.md                         # 專案說明
-├── requirements.txt                  # Python 套件清單
-├── scheduler.py                      # APScheduler 排程主程式：定時抓資料 & 推播
-└── app/                              # 核心程式碼
-    ├── __pycache__/                  # Python 快取
-    ├── fetcher/                      # 資料抓取（API or 爬蟲）
-    │   ├── __pycache__/
-    │   ├── __init__.py
-    │   ├── asset_ranking.py          # 爬取全球資產市值前 10 名
-    │   ├── coinglass_etf.py          # Coinglass API：ETF flow 原始 JSON
-    │   ├── daily_asset_snapshot.py   # 每日資產榜快照並上傳 Supabase
-    │   ├── fetch_etf_daily.py        # 每日近 N 日 BTC/ETH ETF Flow
-    │   └── fetch_etf_history.py      # 歷史 ETF Flow 數據（最多 2000 天）
-    │
-    ├── pipeline/                     # DataFrame 清洗與處理
-    │   ├── __pycache__/
-    │   ├── __init__.py
-    │   ├── asset_ranking_df.py       # 資產榜 JSON → DataFrame
-    │   └── processor.py              # Coinglass JSON → ETF Flow DataFrame
-    │
-    ├── push/                         # 推播 & Flex message 組裝
-    │   ├── __pycache__/
-    │   ├── __init__.py
-    │   ├── flex_utils.py             # 組合五合一 Carousel（ETF, 資產榜, BTC六分類）
-    │   ├── line_command_handler.py   # FastAPI LINE Webhook + 管理指令
-    │   ├── push_btc_holder.py        # BTC 六分類持幣 Flex bubble
-    │   ├── push_etf_chart.py         # 圖片上傳 imgbb，回傳 URL
-    │   └── push_utils.py             # 多目標 LINE 推播
-    │
-    ├── __init__.py
-    ├── btc_holder_distribution.py    # BTC 六大類持幣爬蟲與組裝邏輯
-    ├── btc_holder_distribution_df.py # 將持幣 DataFrame 清洗格式化
-    ├── db.py                         # Supabase 資料庫查詢/Upsert/Delete
-    ├── plot_chart.py                # ETF & 資產榜 Bar/Line/橫條圖
-    ├── plot_chart_btc_holder.py     # BTC 六分類 圓餅圖 & 面積堆疊圖
-    └── utils.py                     # 共用工具：單位換算、人類易讀格式、日期判斷
+│
+├── .env / .env.test # 環境變數（API KEY, Token, Supabase 參數）
+├── requirements.txt # Python 依賴清單
+├── scheduler.py # APScheduler 排程主程式，定時全自動抓資料與推播
+├── README.md # 專案說明（可插入本結構總覽）
+│
+├── app/
+│ ├── fetcher/ # 資料抓取層（API / 爬蟲）
+│ │ ├── asset_ranking.py # 全球資產排行前10名（網站爬蟲）
+│ │ ├── coinglass_etf.py # Coinglass API ETF Flow 抓取工具
+│ │ ├── daily_asset_snapshot.py # 每日資產市值快照抓取＋寫入
+│ │ ├── fetch_etf_daily.py # 近 N 日 ETF Flow（BTC/ETH）
+│ │ ├── fetch_etf_history.py # 歷史 ETF Flow（最長 2000 天）
+│ │ ├── fetch_exchange_balance.py # 今日交易所 BTC 餘額快照
+│ │ ├── fetch_exchange_balance_history.py # 歷史交易所 BTC 餘額（全所全日）
+│ │ ├── fetch_fear_greed.py # 恐懼貪婪指數歷史
+│ │ ├── fetch_funding_rate.py # Funding Rate 歷史
+│ │ ├── fetch_whale_alert.py # Hyperliquid Whale Alert（大戶持倉異動）
+│ │ ├── init.py
+│ │ └── pycache/
+│ │
+│ ├── pipeline/ # DataFrame 層：清洗與資料轉換
+│ │ ├── asset_ranking_df.py # 資產榜 JSON → DataFrame/標準格式
+│ │ ├── processor.py # ETF Flow JSON → 統一 DataFrame
+│ │ ├── init.py
+│ │ └── pycache/
+│ │
+│ ├── push/ # 推播/消息組裝（Flex Bubble 等）
+│ │ ├── flex_utils.py # Flex Bubble 組裝共用工具
+│ │ ├── line_command_handler.py # LINE 指令入口（管理員/推播/補抓）
+│ │ ├── push_btc_holder.py # BTC 持幣分布 Bubble 圖組裝
+│ │ ├── push_etf_chart.py # ETF Flow/資產快照 Bubble 圖組裝
+│ │ ├── push_utils.py # 推播工具（多用戶/群）
+│ │ ├── mylog.log # 執行日誌
+│ │ ├── init.py
+│ │ └── pycache/
+│ │
+│ ├── btc_holder_distribution.py # 六大類 BTC 持幣分類資料（API/本地聚合）
+│ ├── btc_holder_distribution_df.py # 六分類清洗、補齊、落地
+│ ├── db.py # Supabase 寫入/查詢/批次 upsert
+│ ├── plot_chart.py # 通用繪圖工具
+│ ├── plot_chart_btc_holder.py # BTC 六分類圓餅圖繪圖
+│ ├── plot_exchange_balance.py # 交易所 BTC 餘額歷史圖
+│ ├── plot_fear_greed.py # 恐懼貪婪指數折線圖
+│ ├── plot_funding_rate.py # Funding Rate 歷史折線圖
+│ ├── plot_whale_alert.py # Whale Alert 持倉異動圖
+│ ├── utils.py # 其他工具（公用小工具）
+│ └── init.py
+│
+├── supabase_test.py # Supabase 連線測試
+├── test_upload_to_r2.py # Cloudflare R2 圖片上傳測試
+├── insert_fake_btc_holder.py # 測試資料生成
+├── NotoSansTC-Regular.ttf # 圖表中文字型
+└── .gitignore / .github/ / pycache/
 ```
