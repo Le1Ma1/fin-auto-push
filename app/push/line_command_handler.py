@@ -10,6 +10,7 @@ from app.btc_holder_distribution import fetch_btc_holder_distribution
 from app.btc_holder_distribution_df import btc_holder_df_to_db
 from app.db import upsert_btc_holder_distribution
 from app.fetcher.fetch_fear_greed import fetch_and_save_fear_greed
+from app.fetcher.fetch_exchange_balance_history import fetch_and_save_exchange_balance_history
 from app.fetcher.fetch_exchange_balance import fetch_and_save_exchange_balance
 from app.fetcher.fetch_funding_rate import fetch_and_save_funding_rate
 from app.fetcher.fetch_whale_alert import fetch_and_save_whale_alert
@@ -30,7 +31,7 @@ SECRET_COMMANDS = {
     "LTH 歷史補抓": "!sync_lth_history",
     # 新增補抓指令
     "補抓恐懼貪婪全歷史": "!sync_fear_greed",
-    "補抓交易所餘額全歷史": "!sync_exchange_balance",
+    "補抓交易所餘額全歷史": "!sync_exchange_balance_history",
     "補抓 FundingRate 全歷史": "!sync_funding_rate",
     "補抓 Whale Alert": "!sync_whale_alert",
     # 新增 Bubble 測試推播指令
@@ -69,8 +70,8 @@ def handle_message(event):
                 fetch_and_save_fear_greed(days=2000)
                 reply = "✅ 恐懼與貪婪指數全歷史已抓取！"
             elif text == SECRET_COMMANDS["補抓交易所餘額全歷史"]:
-                fetch_and_save_exchange_balance(days=2000)
-                reply = "✅ 交易所餘額全歷史已抓取！"
+                fetch_and_save_exchange_balance_history()
+                reply = "✅ 交易所 BTC 餘額全歷史已抓取！"
             elif text == SECRET_COMMANDS["補抓 FundingRate 全歷史"]:
                 fetch_and_save_funding_rate(days=2000)
                 reply = "✅ Funding Rate 全歷史已抓取！"
