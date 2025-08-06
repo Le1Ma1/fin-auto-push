@@ -71,7 +71,7 @@ def get_asset_competition_flex(today, df, img_url, market_cap_header):
     for i, row in df.iterrows():
         asset_code = row.get('short_name', row.get('name', '-'))
         market_cap_str = row.get('market_cap_zh', '-')    # 只顯示「x.x兆」
-        price_str = row.get('market_cap_num_display', '-')
+        price_str = row.get('price_display', '-')
         body_contents.append({
             "type": "box",
             "layout": "horizontal",
@@ -209,8 +209,18 @@ def get_full_flex_carousel():
         today = datetime.date.today().strftime('%Y-%m-%d')
         asset_list = fetch_global_asset_top10()
         df_asset = asset_top10_to_df(asset_list, today)
-        df_asset['market_cap_num_display'] = df_asset['market_cap_num'].apply(
-            lambda x: f"{float(x):,.1f}" if pd.notnull(x) else "-"
+        print(df_asset[['name', 'symbol', 'market_cap', 'market_cap_num']])
+
+        def parse_float_safe(x):
+            try:
+                if isinstance(x, str):
+                    x = x.replace("$", "").replace(",", "").strip()
+                return float(x)
+            except Exception:
+                return float('nan')
+
+        df_asset['price_display'] = df_asset['market_cap'].apply(
+            lambda x: f"{parse_float_safe(x):,.1f}" if pd.notnull(x) else "-"
         )
 
         def symbol_to_zh_t(val):
@@ -227,16 +237,6 @@ def get_full_flex_carousel():
             lambda x: x.strip().split()[-1] if isinstance(x, str) and x.strip() else x
         )
         df_asset['market_cap_zh'] = df_asset['symbol'].apply(symbol_to_zh_t)
-
-        # 動態處理 Supabase/raw data 的市值欄位
-        # 若沒有 market_cap_display / market_cap_num，就自動 parse symbol 欄位
-        if 'market_cap_num' not in df_asset.columns:
-            df_asset['market_cap_num'] = df_asset['symbol'].apply(parse_market_cap_symbol)
-        # 2. 價格 fallback
-        if 'price' in df_asset.columns:
-            df_asset['price_display'] = df_asset['price'].apply(lambda x: f"{float(x):,.1f}" if pd.notnull(x) else "0.0")
-        else:
-            df_asset['price_display'] = "0.0"
         # ----------------------------------
 
         # 3. 排序、畫圖

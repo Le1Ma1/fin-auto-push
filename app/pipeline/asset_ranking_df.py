@@ -21,5 +21,6 @@ def asset_top10_to_df(asset_list, date):
     df = pd.DataFrame(asset_list)
     # 這裡的 symbol 就是市值欄位（字串），直接轉成 market_cap_num
     df['market_cap_num'] = df['symbol'].apply(parse_market_cap_symbol)
+    print(df[['symbol', 'market_cap_num']])
     df['date'] = date
     return df
