@@ -2,6 +2,10 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from app.fetcher.daily_asset_snapshot import daily_asset_snapshot
 from app.fetcher.fetch_etf_daily import fetch_and_save as fetch_etf_daily
+from app.fetcher.fetch_fear_greed import fetch_and_save_fear_greed
+from app.fetcher.fetch_exchange_balance import fetch_and_save_exchange_balance
+from app.fetcher.fetch_funding_rate import fetch_and_save_funding_rate
+from app.fetcher.fetch_whale_alert import fetch_and_save_whale_alert
 from app.push.push_utils import push_flex_to_targets
 from app.push.flex_utils import get_full_flex_carousel 
 from app.btc_holder_distribution import fetch_btc_holder_distribution
