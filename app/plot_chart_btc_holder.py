@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 import pandas as pd
 from app.utils import BTC_HOLDER_COLOR_MAP
-
 from app.utils import BTC_HOLDER_COLOR_MAP
 
 def plot_btc_holder_pie(df: pd.DataFrame, date_str: str) -> str:

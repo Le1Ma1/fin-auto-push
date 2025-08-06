@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
 import app.fetcher.fetch_etf_daily as fetch_etf_daily
-from app.push.flex_utils import get_full_flex_carousel, get_plan_flex_bubble, get_pro_plan_carousel, get_elite_carousels, get_flex_bubble_fear_greed, get_flex_bubble_exchange_balance, get_flex_bubble_funding_rate, get_flex_bubble_whale_alert
+from app.push.flex_utils import get_full_flex_carousel, get_plan_flex_bubble #get_pro_plan_carousel, get_elite_carousels, get_flex_bubble_fear_greed, get_flex_bubble_exchange_balance, get_flex_bubble_funding_rate, get_flex_bubble_whale_alert
 from app.push.push_utils import push_flex_to_targets
 from app.btc_holder_distribution import fetch_btc_holder_distribution
 from app.btc_holder_distribution_df import btc_holder_df_to_db
@@ -88,6 +88,14 @@ def handle_message(event):
                 for carousel in carousels:
                     push_flex_to_targets(carousel)
                 reply = "✅ Elite 方案推播已測試送出"
+            elif text == SECRET_COMMANDS["測試推播"]:
+                carousel = get_full_flex_carousel()
+                push_flex_to_targets(carousel)
+                reply = "✅ 測試推播已送出"
+            elif text == SECRET_COMMANDS["更新ETF"]:
+                fetch_etf_daily.fetch_and_save("BTC", days=5)
+                fetch_etf_daily.fetch_and_save("ETH", days=5)
+                reply = "✅ ETF數據已同步（近五日）"
             else:
                 reply = None
 

@@ -1,16 +1,25 @@
+import pandas as pd
 from app.db import query_btc_holder_distribution
 from app.plot_chart_btc_holder import plot_btc_holder_pie
 from app.push.push_etf_chart import upload_to_r2
 from app.utils import BTC_HOLDER_COLOR_MAP
 
-def get_flex_bubble_btc_holder(days=1):
+def get_flex_bubble_btc_holder(days=7):
     df_hist = query_btc_holder_distribution(days=days)
-    today = df_hist['date'].max().strftime("%Y-%m-%d")
-    df_today = df_hist[df_hist['date'] == df_hist['date'].max()]
-    if len(df_hist['date'].unique()) >= 2:
-        yesterday = sorted(df_hist['date'].unique())[-2]
+    df_hist['date'] = pd.to_datetime(df_hist['date'])
+    unique_dates = sorted(df_hist['date'].unique())
+    print("unique_dates:", unique_dates)
+    print("df_hist shape:", df_hist.shape)
+    print(df_hist[['date', 'category', 'percent']].tail(20))  # 印最後20筆資料
+
+    if len(unique_dates) >= 2:
+        today = unique_dates[-1]
+        yesterday = unique_dates[-2]
+        df_today = df_hist[df_hist['date'] == today]
         df_yesterday = df_hist[df_hist['date'] == yesterday]
     else:
+        today = df_hist['date'].max()
+        df_today = df_hist[df_hist['date'] == today]
         df_yesterday = None
 
     def fmt(val): return f"{float(val):.1f}%"
@@ -21,12 +30,6 @@ def get_flex_bubble_btc_holder(days=1):
             return 0.0
     def format_percent(arrow, sign, diff):
         return f"{arrow}{sign}{abs(diff):.2f}%"
-
-    highlight_lines = [
-        f"💡 長期持有者：{fmt(safe(df_today, '長期持有者'))}（籌碼極度集中）",
-        f"🏦 交易所儲備：{fmt(safe(df_today, '交易所儲備'))}（拋壓有限）",
-        f"🏢 ETF/機構：{fmt(safe(df_today, 'ETF/機構'))}（機構參與提升）",
-    ]
 
     cats = ["長期持有者", "交易所儲備", "ETF/機構", "未開採", "中央銀行／主權基金", "其他"]
 
@@ -41,7 +44,7 @@ def get_flex_bubble_btc_holder(days=1):
             pct_today = safe(df_today, cat)
             pct_yest = safe(df_yesterday, cat)
             diff = pct_today - pct_yest
-            if abs(diff) >= 0.1:
+            if abs(diff) > 0:
                 arrow = "🔼" if diff > 0 else "🔽"
                 sign = "+" if diff > 0 else ""
                 color = "#37D400" if diff > 0 else "#FA5252"
@@ -81,7 +84,9 @@ def get_flex_bubble_btc_holder(days=1):
                     "margin": "sm"
                 })
 
-    img_pie = upload_to_r2(plot_btc_holder_pie(df_today, today))
+    date_str = pd.to_datetime(today).strftime("%Y-%m-%d")
+    img_pie = upload_to_r2(plot_btc_holder_pie(df_today, date_str))
+
     bubble = {
         "type": "bubble",
         "size": "mega",

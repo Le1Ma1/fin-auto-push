@@ -1,7 +1,8 @@
 import os
-import matplotlib.pyplot as plt
 import pandas as pd
 import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 from app.utils import human_unit, get_ch_unit_and_div
 
@@ -131,26 +132,19 @@ import pandas as pd
 def plot_asset_top10_bar_chart(df: pd.DataFrame, today: str,
                                unit_str: str = '兆',
                                unit_div: float = 1e12) -> str:
-    """
-    畫全球資產市值 Top10 橫條圖，輸出橫向長條 (2:1) PNG。
-    """
-    # 1. 建立 12x6 吋的畫布 ⇒ 12/6 = 2:1
     fig, ax = plt.subplots(figsize=(12, 6), facecolor='#191E24')
     ax.set_facecolor('#191E24')
-
-    # 2. 移除所有 Matplotlib 邊距
     plt.tight_layout(pad=0)
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
-
-    # 3. 資料處理
-    df_sorted = df.sort_values('symbol_cap_num', ascending=False).reset_index(drop=True)
-    y_labels   = [f"{i+1:02d}. {name}" for i, name in enumerate(df_sorted['name'])]
-    bar_vals   = df_sorted['symbol_cap_num'] / unit_div
-
-    # 4. 畫水平橫條
+    # 1. 市值由小到大排序
+    df_sorted = df.sort_values('market_cap_num', ascending=True).reset_index(drop=True)
+    # 2. y_labels 取 name 欄位最後一組（如 BTC）
+    y_labels = [
+        f"{i+1:02d}. {row['name'].strip().split()[-1] if isinstance(row['name'], str) and row['name'].strip() else row['name']}"
+        for i, row in df_sorted.iterrows()
+    ]
+    bar_vals = df_sorted['market_cap_num'] / unit_div
     bars = ax.barh(y_labels, bar_vals, color='#68A4FF')
-
-    # 5. 格線 & 坐標軸樣式
     ax.grid(axis='x', color='#444', linestyle='--', linewidth=1, alpha=0.5)
     for spine in ax.spines.values():
         spine.set_color('white')
@@ -158,29 +152,11 @@ def plot_asset_top10_bar_chart(df: pd.DataFrame, today: str,
     ax.tick_params(axis='y', colors='white')
     ax.xaxis.label.set_color('white')
     ax.yaxis.label.set_color('white')
-    ax.title.set_color('white')
-
-    # 6. 條末標註數值
     for i, v in enumerate(bar_vals):
-        ax.text(
-            v, i,
-            f"{v:,.2f}{unit_str}",  # e.g. "22.60兆"
-            va='center', fontsize=13, color='white'
-        )
-
-    # 7. 標題與軸標籤
-    ax.set_title(f"{today} 全球資產市值 Top10（{unit_str} 美元）",
-                 fontsize=20, pad=10, color='white')
+        ax.text(v, i, f"{v:,.2f}{unit_str}", va='center', fontsize=13, color='white')
+    ax.set_title(f"{today} 全球資產市值 Top10（{unit_str} 美元）", fontsize=20, pad=10, color='white')
     ax.set_xlabel(f"市值（{unit_str} 美元）", fontsize=16)
-
-    # 8. 輸出 PNG，去除所有空白
     img_path = f"asset_top10_bar_{today}.png"
-    plt.savefig(
-        img_path,
-        dpi=200,
-        bbox_inches='tight',
-        pad_inches=0,
-        transparent=False
-    )
+    plt.savefig(img_path, dpi=200, bbox_inches='tight', pad_inches=0, transparent=False)
     plt.close(fig)
     return img_path

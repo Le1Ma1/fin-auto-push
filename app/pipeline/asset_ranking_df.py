@@ -1,16 +1,25 @@
 import pandas as pd
 import re
 
-def parse_market_cap(market_cap_str):
+def parse_market_cap_symbol(s):
+    if not isinstance(s, str):
+        return 0
+    s = s.replace("$", "").replace(",", "").strip()
+    match = re.match(r'([0-9.]+)\s*([TBM]?)', s)
+    if not match:
+        return 0
+    num, unit = match.groups()
+    try:
+        num = float(num)
+    except Exception:
+        return 0
     unit_map = {"T": 1e12, "B": 1e9, "M": 1e6}
-    m = re.match(r"\$?([\d.]+)\s*([TBM])", market_cap_str.replace(",", ""))
-    if m:
-        num, unit = m.groups()
-        return float(num) * unit_map.get(unit, 1)
-    return float(market_cap_str.replace("$", "").replace(",", ""))
+    mult = unit_map.get(unit.upper(), 1)
+    return num * mult
 
 def asset_top10_to_df(asset_list, date):
     df = pd.DataFrame(asset_list)
-    df['market_cap_num'] = df['market_cap'].map(parse_market_cap)
+    # 這裡的 symbol 就是市值欄位（字串），直接轉成 market_cap_num
+    df['market_cap_num'] = df['symbol'].apply(parse_market_cap_symbol)
     df['date'] = date
     return df
