@@ -46,7 +46,7 @@ def get_flex_bubble_btc_holder(days=7):
             diff = pct_today - pct_yest
             if abs(diff) > 0:
                 arrow = "🔼" if diff > 0 else "🔽"
-                sign = "+" if diff > 0 else ""
+                sign = "+" if diff > 0 else "-"
                 color = "#37D400" if diff > 0 else "#FA5252"
                 display_name = display_map.get(cat, cat)
                 change_lines.append({
@@ -69,16 +69,21 @@ def get_flex_bubble_btc_holder(days=7):
                         },
                         {
                             "type": "text",
-                            "text": format_percent(arrow, sign, diff),
+                            "text": arrow,  # emoji
                             "size": "sm",
-                            "align": "end",
-                            "flex": 6,
+                            "color": color,
+                            "flex": 2,
+                            "align": "end"
+                        },
+                        {
+                            "type": "text",
+                            "text": f"{sign}{abs(diff):.2f}%",
+                            "fontFamily": "monospace",
+                            "size": "sm",
                             "color": color,
                             "weight": "bold",
-                            "wrap": False,
-                            "style": "normal",
-                            "gravity": "center",
-                            "contents": [],
+                            "flex": 4,
+                            "align": "start"
                         }
                     ],
                     "margin": "sm"

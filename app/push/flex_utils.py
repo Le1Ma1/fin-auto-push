@@ -62,7 +62,7 @@ def get_asset_competition_flex(today, df, img_url, market_cap_header):
             "contents": [
                 {"type": "text", "text": "排", "color": "#C7D3E6", "size": "sm", "flex": 2, "align": "start"},
                 {"type": "text", "text": "資產", "color": "#C7D3E6", "size": "sm", "flex": 6, "align": "end"},
-                {"type": "text", "text": market_cap_header, "color": "#C7D3E6", "size": "sm", "align": "end", "flex": 8},
+                {"type": "text", "text": f'{market_cap_header}(美元)', "color": "#C7D3E6", "size": "sm", "align": "end", "flex": 8},
                 {"type": "text", "text": "價格(美元)", "color": "#C7D3E6", "size": "sm", "align": "end", "flex": 9}
             ]
         }
