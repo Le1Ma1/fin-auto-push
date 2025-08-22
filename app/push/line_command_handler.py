@@ -3,9 +3,10 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
+
 import app.fetcher.fetch_etf_daily as fetch_etf_daily
-from app.push.flex_utils import get_full_flex_carousel, get_plan_flex_bubble #get_pro_plan_carousel, get_elite_carousels, get_flex_bubble_fear_greed, get_flex_bubble_exchange_balance, get_flex_bubble_funding_rate, get_flex_bubble_whale_alert
-from app.push.push_utils import push_flex_to_targets
+from app.push.flex_utils import get_full_flex_carousel, get_plan_flex_bubble
+from app.push.push_utils import push_flex_to_targets, push_text_to_targets
 from app.btc_holder_distribution import fetch_btc_holder_distribution
 from app.btc_holder_distribution_df import btc_holder_df_to_db
 from app.db import upsert_btc_holder_distribution
@@ -17,9 +18,11 @@ from app.fetcher.fetch_whale_alert import fetch_and_save_whale_alert
 
 app = FastAPI()
 load_dotenv()
+
 CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
 ADMIN_USER_ID = os.getenv("LINE_ADMIN_USER_ID")
+
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 
@@ -36,7 +39,9 @@ SECRET_COMMANDS = {
     "補抓 Whale Alert": "!sync_whale_alert",
     # 新增 Bubble 測試推播指令
     "測試 Pro 推播": "!test_pro_push",
-    "測試 Elite 推播": "!test_elite_push"
+    "測試 Elite 推播": "!test_elite_push",
+    # ✅ 新增白名單測試推播指令
+    "白名單測試推播": "!test_whitelist_push",
 }
 
 @app.post("/callback")
@@ -53,7 +58,7 @@ def handle_message(event):
 
     print(f"[DEBUG] User ID: {user_id}, Message: {text}")
 
-    # 1. 任何人都可用「方案介紹」
+    # 1. 所有人可用
     if text in ["/方案介紹", "方案介紹"]:
         flex_bubble = get_plan_flex_bubble()
         line_bot_api.reply_message(
@@ -62,10 +67,9 @@ def handle_message(event):
         )
         return
 
-    # 2. 僅允許管理員使用秘密指令（! 開頭）
+    # 2. 管理員秘密指令
     if text.startswith("!"):
         if user_id == ADMIN_USER_ID:
-            # ---- 新增 Bubble 全歷史補抓 ----
             if text == SECRET_COMMANDS["補抓恐懼貪婪全歷史"]:
                 fetch_and_save_fear_greed(days=2000)
                 reply = "✅ 恐懼與貪婪指數全歷史已抓取！"
@@ -76,14 +80,15 @@ def handle_message(event):
                 fetch_and_save_funding_rate(days=2000)
                 reply = "✅ Funding Rate 全歷史已抓取！"
             elif text == SECRET_COMMANDS["補抓 Whale Alert"]:
-                fetch_and_save_whale_alert()  # 只能補抓近24小時
+                fetch_and_save_whale_alert()
                 reply = "✅ Whale Alert 最新24h已抓取！"
-            # ---- 新增 Bubble 測試推播 ----
             elif text == SECRET_COMMANDS["測試 Pro 推播"]:
+                from app.push.flex_utils import get_pro_plan_carousel
                 carousel = get_pro_plan_carousel()
                 push_flex_to_targets(carousel)
                 reply = "✅ Pro 方案推播已測試送出"
             elif text == SECRET_COMMANDS["測試 Elite 推播"]:
+                from app.push.flex_utils import get_elite_carousels
                 carousels = get_elite_carousels()
                 for carousel in carousels:
                     push_flex_to_targets(carousel)
@@ -96,6 +101,9 @@ def handle_message(event):
                 fetch_etf_daily.fetch_and_save("BTC", days=5)
                 fetch_etf_daily.fetch_and_save("ETH", days=5)
                 reply = "✅ ETF數據已同步（近五日）"
+            elif text == SECRET_COMMANDS["白名單測試推播"]:
+                push_text_to_targets("📢 白名單測試訊息")
+                reply = "✅ 已發送白名單測試訊息"
             else:
                 reply = None
 
@@ -103,5 +111,5 @@ def handle_message(event):
                 line_bot_api.reply_message(event.reply_token, TextSendMessage(reply))
             return
         else:
-            # 非管理員靜音
+            # 非管理員 → 靜音
             return
